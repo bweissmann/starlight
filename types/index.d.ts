@@ -1,0 +1,1 @@
+/// <reference path="./tree-sitter-typescript.d.ts" />
