@@ -37,10 +37,3 @@ export async function askToAcceptProposal(
   consoleLogDiff(await proposalDiff(filename));
   return askYesNoContinue("Accept Changes?", { onContinue, onNo, onYes: async () => await acceptProposal(filename) })
 }
-
-
-/** Likely, this should just be "askProposalYNC" with only the onNo and onContinue provided */
-export async function askDiffYesNoContinue<T>(diff: string | Promise<string>, prompt: string, { onContinue, onNo, onYes }: { onYes?: () => Promise<T>, onNo?: () => Promise<T>, onContinue?: () => Promise<T> }) {
-  consoleLogDiff(await diff);
-  return askYesNoContinue(prompt, { onContinue, onNo, onYes })
-}
