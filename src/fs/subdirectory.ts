@@ -1,6 +1,5 @@
-import fs from 'fs/promises';
-import write from './write';
-import { directoryOf, filenameOf } from './utils';
+import write from './write.js';
+import { directoryOf, filenameOf } from './utils.js';
 import path from 'path';
 
 /**

@@ -10,7 +10,7 @@ import parse_top_level_functions from './understand/parse/top_level_functions.js
 import propose, { askToAcceptProposal, proposalDiff } from './tools/propose.js';
 import read from './fs/read.js';
 import ls from './fs/ls.js';
-import { extractCodeSnippet, insertSnippetIntoFile } from './tools/code-tools.js';
+import { extractCodeSnippet, insertSnippetIntoFile } from './tools/code-transformer.js';
 import pretty_print_directory from './fs/pretty_print_directory.js';
 import { respondInJSONFormat } from './implement/utils.js';
 import getInput from './tools/user_input.js';

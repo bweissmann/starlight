@@ -1,4 +1,4 @@
 # run "source ./scripts/source.sh" from the root directory 
 alias r='./scripts/r'
-alias p='./scripts/p'
+alias s='./scripts/s'
 alias c='./scripts/c'

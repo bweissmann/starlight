@@ -32,18 +32,18 @@ export async function executeQuery<T>(query: Query<T>) {
 
 export async function chat(_messages: MessageOrStr | MessageOrStr[], opts?: { name?: string, model?: ModelName }): Promise<string> {
     const messages = toMessageArray(_messages)
-    const model = opts?.model ?? 'gpt-4';
+    const model = opts?.model ?? 'gpt-3.5-turbo';
     const cacheKey = vomit(messages) + vomit(opts);
-    
+
     logMessages(messages)
-    
+
     const cachedResult = await getCachedResult(cacheKey);
     if (cachedResult) {
         console.log(chalk.green.bold.bgBlack("*** Cached result found ***"))
         console.log(chalk.bold(cachedResult))
         return cachedResult
     }
-    
+
     const inputPrice = estimatePricing({ input: messages, output: '' }, model).input.toFixed(3)
     console.log(opts?.name ? chalk.red(opts?.name) : '*', chalk.red.bold(model), `$${inputPrice}`)
 
