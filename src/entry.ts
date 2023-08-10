@@ -3,7 +3,6 @@ import implement from './implement/main.js';
 import { appendLineNumbers, stripLineNumbers } from './understand/utils.js';
 import typescript_to_json_spec, { execute_to_json_spec } from './implement/bits/typescript_to_json_spec.js';
 import { chat, execute, sequence } from './llm/chat.js';
-import parse_imports_from_file from './understand/parse/imports.js';
 import { g4, unstructured } from './llm/utils.js';
 import { assistant, logger, system, user, vomit } from './utils.js';
 import { changeFile, file, readAndWrite, writeJSONSpec } from './programs.js';
@@ -27,7 +26,7 @@ documentation
 document every file in the codebase
 */
 
-changeFile(
+changeFile( // do this for g35 too
     file('llm/utils'),
     `I have a function 
 export function g4(messages: MessageOrStr | MessageOrStr[]): ChatSpec
