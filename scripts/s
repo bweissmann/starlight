@@ -1,3 +1,3 @@
 #!/bin/bash
 
-npx tsc; node build/shell.js
+npx tsc; node build/runner/shell.js

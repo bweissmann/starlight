@@ -1,2 +1,3 @@
-npx tsc;
-node build/changes.js "$*";
+#!/bin/bash
+
+npx tsc; node build/runner/changes.js

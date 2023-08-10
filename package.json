@@ -1,8 +1,7 @@
 {
-  "name": "smith",
-  "version": "1.0.0",
+  "name": "starlight",
+  "version": "0.0.1",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "dev": "npx ts-node entry.ts",
     "start": "node build/entry.js",
