@@ -4,30 +4,47 @@ import { appendLineNumbers, stripLineNumbers } from './understand/utils.js';
 import typescript_to_json_spec from './implement/bits/typescript_to_json_spec.js';
 import { ChatContinuationResult, chat, sequence, execute } from './llm/chat.js';
 import { g4, query, unstructured } from './llm/utils.js';
-import { assistant, system, user, vomit } from './utils.js';
+import { MaybePromise, assistant, system, user, vomit } from './utils.js';
 import parse_ts_types_from_file from './understand/parse/ts_types.js';
 import parse_top_level_functions from './understand/parse/top_level_functions.js';
 import propose, { askToAcceptProposal, proposalDiff } from './tools/propose.js';
-import read from './fs/read.js';
+import read, { fileExists } from './fs/read.js';
 import ls from './fs/ls.js';
 import { extractCodeSnippet, insertSnippetIntoFile } from './tools/code-transformer.js';
 import pretty_print_directory from './fs/pretty_print_directory.js';
 import { respondInJSONFormat } from './implement/utils.js';
 import getInput from './tools/user_input.js';
+import { subsequenceMatch } from './tools/search.js';
 
 /** Attempt to get a file by name in the src directory. */
 export async function file(name: string) {
-    const dirs = await ls('./src');
-    const options = dirs.filter(file => file.includes(name))
-    if (options.length === 1) {
-        return options[0]
+    const dirs = (await ls('./src')).filter(file => !file.includes('.proposal'));
+
+    // prefer an exact match
+    const exactMatches = dirs.filter(file => file.includes(name))
+    if (exactMatches.length === 1) {
+        return exactMatches[0]
+    } else if (exactMatches.length > 1) {
+        return askForPathAmongOptions(exactMatches, name)
     }
 
+    // No exact matches
+    const nameNoWhitespace = name.replace(/\s/g, '')
+    const subsequenceMatches = dirs.filter(file => subsequenceMatch(nameNoWhitespace, file))
+    if (subsequenceMatches.length === 1) {
+        return subsequenceMatches[0]
+    }
+
+    const options = subsequenceMatches.length > 0 ? subsequenceMatches : dirs;
+    return askForPathAmongOptions(options, name)
+}
+
+async function askForPathAmongOptions(options: string[], name: string) {
     return execute(query<{ path: string }>({
         name: "Get File By Name",
         jsonSpec: `{ path: string }`,
         messages: (jsonSpec) => [
-            pretty_print_directory(options.length > 0 ? options : dirs),
+            pretty_print_directory(options),
             `the user is asking for a filepath, but they are being vague about the name.
             The file they want is somewhere in this directory structure. What are the options for what they might be asking for?
             Here is the name they provided: "${name}".
@@ -93,14 +110,22 @@ export async function readAndWrite(filename: string) {
 }
 
 
-export async function change(filenameOrPromise: string | Promise<string>, change: string) {
-    const filename = await filenameOrPromise
-    const fileContents = await read(filename)
+export async function change(filenameOrFilepath: MaybePromise<string>, change: string) {
+    filenameOrFilepath = await filenameOrFilepath
+    if (await fileExists(filenameOrFilepath)) {
+        return _change(filenameOrFilepath, change)
+    } else {
+        return _change(await file(filenameOrFilepath), change)
+    }
+}
+
+async function _change(filepath: string, change: string) {
+    const fileContents = await read(filepath)
 
     const response = await sequence([
         g4(
             system(`You are an expert programmer. Make the requested changes to the file provided.`),
-            user(`:file ${filename}`),
+            user(`:file ${filepath}`),
             assistant(appendLineNumbers(fileContents)),
             user(`Here is the change the user wants: \n\n${change}`),
             system(`
@@ -115,10 +140,10 @@ export async function change(filenameOrPromise: string | Promise<string>, change
         ),
     ])
 
-    await saveCodeSnippetAsProposal(filename, fileContents, response)
+    await saveCodeSnippetAsProposal(filepath, fileContents, response)
 
-    await askToAcceptProposal(filename, {
-        onContinue: async () => await rewriteChange(filename, change, await getInput("Feedback on this change? ")),
+    await askToAcceptProposal(filepath, {
+        onContinue: async () => await rewriteChange(filepath, change, await getInput("Feedback on this change? ")),
     })
 }
 

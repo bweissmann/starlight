@@ -51,3 +51,5 @@ export function logger(ch?: ChalkInstance): <T>(x: T) => T {
   }
 
 }
+
+export type MaybePromise<T> = T | Promise<T>

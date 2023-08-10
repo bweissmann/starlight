@@ -21,7 +21,7 @@ Top Level Tasks:
 */
 
 change(
-  file('search'),
+  'search',
   `
   Implement a function subsequenceMatch(query: string, candidate: string):boolean
 
