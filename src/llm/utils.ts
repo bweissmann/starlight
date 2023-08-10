@@ -18,8 +18,11 @@ export function g4(...messages: MessageOrStr[] | [MessageOrStr[]]): ChatSpec {
     return { model: 'gpt-4', messages: toMessageArray(flattenedMessages) }
 }
 
-export function g35(messages: MessageOrStr | MessageOrStr[]): ChatSpec {
-    return { model: 'gpt-3.5-turbo', messages: toMessageArray(messages) }
+export function g35(messages: MessageOrStr[]): ChatSpec;
+export function g35(...messages: MessageOrStr[]): ChatSpec;
+export function g35(...messages: MessageOrStr[] | [MessageOrStr[]]): ChatSpec {
+    const flattenedMessages = (Array.isArray(messages[0]) ? messages[0] : messages) as MessageOrStr[]
+    return { model: 'gpt-3.5-turbo', messages: toMessageArray(flattenedMessages) }
 }
 
 export function unstructured(unstructued: Unstructured) {

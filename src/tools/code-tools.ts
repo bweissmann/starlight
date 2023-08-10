@@ -1,8 +1,9 @@
-import { chatYNQuestion, classifier } from "../llm/classifier.js";
+import { chatYNQuestion } from "../llm/classifier.js";
 import { ChatContinuationResult, chat } from "../llm/chat.js";
 import { appendLineNumbers } from "../understand/utils.js";
-import { assistant, cast, system, user } from "../utils.js";
+import { assistant, system, user } from "../utils.js";
 import parseJSON from "../llm/parser/json.js";
+import { g35 } from "../llm/utils.js";
 
 export function extractCodeSnippet(input: string | ChatContinuationResult): string {
     return _extractCodeSnippet(typeof input === 'string' ? input : input.message)
@@ -42,14 +43,16 @@ export async function insertSnippetIntoFile(fileContents: string, code: string) 
         assistant(code),
     ]
 
-    const isEntireFile = await chatYNQuestion([
-        ...preamble,
-        user(`
+    const isEntireFile = await chatYNQuestion(
+        g35(
+            ...preamble,
+            user(`
         Does the snippet represent a portion of the file? Or does it represent a replacement for the entire file? 
         Keep in mind that it is extremely unexpected for large portions of a file to be completely deleted, and files ususlly start with imports.
         Respond true if it is the whole file, false if its a portion.
         `)
-    ], { model: 'gpt-3.5-turbo' })
+        )
+    )
 
     if (isEntireFile) {
         return code

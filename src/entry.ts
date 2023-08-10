@@ -26,7 +26,7 @@ documentation
 document every file in the codebase
 */
 
-changeFile( // do this for g35 too
+changeFile(
     file('llm/utils'),
     `I have a function 
 export function g4(messages: MessageOrStr | MessageOrStr[]): ChatSpec

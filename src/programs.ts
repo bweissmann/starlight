@@ -3,7 +3,7 @@ import implement from './implement/main.js';
 import { appendLineNumbers, stripLineNumbers } from './understand/utils.js';
 import typescript_to_json_spec from './implement/bits/typescript_to_json_spec.js';
 import { ChatContinuationResult, chat, sequence, execute } from './llm/chat.js';
-import { g35, g4, query, unstructured } from './llm/utils.js';
+import { g4, query, unstructured } from './llm/utils.js';
 import { assistant, system, user, vomit } from './utils.js';
 import parse_ts_types_from_file from './understand/parse/ts_types.js';
 import parse_top_level_functions from './understand/parse/top_level_functions.js';
@@ -98,7 +98,7 @@ export async function changeFile(filenameOrPromise: string | Promise<string>, ch
     const fileContents = await read(filename)
 
     const response = await sequence([
-        g4([
+        g4(
             system(`You are an expert programmer. Make the requested changes to the file provided.`),
             user(`:file ${filename}`),
             assistant(appendLineNumbers(fileContents)),
@@ -112,7 +112,7 @@ export async function changeFile(filenameOrPromise: string | Promise<string>, ch
             <your code>
             \`\`\`
             `),
-        ]),
+        ),
     ])
 
     await saveCodeSnippetAsProposal(filename, fileContents, response)

@@ -3,7 +3,7 @@ import { sequence, execute } from '../llm/chat.js';
 import parse_draft_into_snippets from './bits/parse_draft_into_snippets.js';
 import unstructured_first_draft from './bits/unstructured_first_draft.js';
 import { system, user } from '../utils.js';
-import {  g35 } from '../llm/utils.js';
+import { g35 } from '../llm/utils.js';
 
 export default async function implement(goal: string) {
 
@@ -30,19 +30,19 @@ export default async function implement(goal: string) {
 export async function implement_hard(goal: string) {
 
     sequence([
-        g35([
+        g35(
             system(`Make a plan for how to implement this.
             Describe the paragram as a paragraph.
             This should be a clear, concise document that can be critiqued by another engineer and understood by a product manager.
             Focus on code structure and design.
             `),
             user(goal)
-        ]),
-        g35([
+        ),
+        g35(
             user(`Write that plan as a step-by-step list of instructions.`)
-        ]),
-        g35([
+        ),
+        g35(
             user(`write the code`)
-        ])
+        )
     ])
 }
