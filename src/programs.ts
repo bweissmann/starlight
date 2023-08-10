@@ -93,7 +93,7 @@ export async function readAndWrite(filename: string) {
 }
 
 
-export async function changeFile(filenameOrPromise: string | Promise<string>, change: string) {
+export async function change(filenameOrPromise: string | Promise<string>, change: string) {
     const filename = await filenameOrPromise
     const fileContents = await read(filename)
 

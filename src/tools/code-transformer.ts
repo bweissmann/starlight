@@ -38,7 +38,7 @@ export async function insertSnippetIntoFile(fileContents: string, code: string) 
         You will identify where in the original file the patch should be applied.
         `),
         user('Here is the file'),
-        assistant(contentLined),
+        assistant(fileContents.trim().length === 0 ? "<empty file>" : contentLined),
         user('Here is the patch'),
         assistant(code),
     ]

@@ -1,7 +1,7 @@
 
 import 'dotenv/config';
 import getInput from '@/tools/user_input.js';
-import { changeFile, file, rewriteChange } from '@/programs.js';
+import { change, file, rewriteChange } from '@/programs.js';
 import { fileExists } from '@/fs/read.js';
 import { askToAcceptProposal, proposalFilepath } from '@/tools/propose.js';
 import chalk from 'chalk';
@@ -17,5 +17,5 @@ if (hasProposal) {
     });
 } else {
     const change = await getInput("What change do you want to make? ");
-    await changeFile(filename, change);
+    await change(filename, change);
 }

@@ -1,9 +1,16 @@
+import ls from '@/fs/ls.js';
+import pretty_print_directory from '@/fs/pretty_print_directory.js';
+import { sequence } from '@/llm/chat.js';
+import { g4 } from '@/llm/utils.js';
+import { change, file } from '@/programs.js';
 import 'dotenv/config';
 
 /*
 Top Level Tasks:
 - Move user, system, assistant from utils to llm/utils
   > implement search?
+
+  - make "create file" in /programs
 
 - Change file detection to the forward partials style
 
@@ -13,18 +20,20 @@ Top Level Tasks:
   > document every file in the codebase
 */
 
+change(
+  file('search'),
+  `
+  Implement a function subsequenceMatch(query: string, candidate: string):boolean
 
+  Which uses subsequence search:
 
-// sequence([
-//   g4(
-//     `I have an existing codebase. with the following structure:
+  Given two sequences:
+Main sequence: A = "ABCD"
+Sub-sequence: B = "AC"
+B is a subsequence of A because you can delete "B" and "D" from A and get B without changing the order of the remaining elements.
 
-//     ${pretty_print_directory(await ls(`./src`))}
-
-//     I want to add some function for search, like "search by exact keyword" "search by regex", etc.
-//     Where should I put this in my repo?
-//     `)
-// ])
+  `
+)
 
 /*
 WORKING STACK:
