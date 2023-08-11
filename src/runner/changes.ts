@@ -6,16 +6,15 @@ import { fileExists } from '@/fs/read.js';
 import { askToAcceptProposal, proposalFilepath } from '@/tools/propose.js';
 import chalk from 'chalk';
 
-const filename = await file(await getInput("What file do you want to change? "));
+const filename = await file(getInput("What file do you want to change? "));
 console.log("Using", chalk.green(filename));
-const hasProposal = await fileExists(proposalFilepath(filename));
 
-if (hasProposal) {
+if (await fileExists(proposalFilepath(filename))) {
     console.log("Proposal Found");
     await askToAcceptProposal(filename, {
         onContinue: async () => await rewriteChange(filename, 'unknown', await getInput("Feedback on this change? "))
     });
 } else {
-    const change = await getInput("What change do you want to make? ");
-    await change(filename, change);
+    const request = await getInput("What change do you want to make? ");
+    await change(filename, request);
 }

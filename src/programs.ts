@@ -17,7 +17,8 @@ import getInput from './tools/user_input.js';
 import { subsequenceMatch } from './tools/search.js';
 
 /** Attempt to get a file by name in the src directory. */
-export async function file(name: string) {
+export async function file(_name: MaybePromise<string>) {
+    const name = await _name
     const dirs = (await ls('./src')).filter(file => !file.includes('.proposal'));
 
     // prefer an exact match
@@ -110,16 +111,16 @@ export async function readAndWrite(filename: string) {
 }
 
 
-export async function change(filenameOrFilepath: MaybePromise<string>, change: string) {
+export async function change(filenameOrFilepath: MaybePromise<string>, request: string) {
     filenameOrFilepath = await filenameOrFilepath
     if (await fileExists(filenameOrFilepath)) {
-        return _change(filenameOrFilepath, change)
+        return _change(filenameOrFilepath, request)
     } else {
-        return _change(await file(filenameOrFilepath), change)
+        return _change(await file(filenameOrFilepath), request)
     }
 }
 
-async function _change(filepath: string, change: string) {
+async function _change(filepath: string, request: string) {
     const fileContents = await read(filepath)
 
     const response = await sequence([
@@ -127,7 +128,7 @@ async function _change(filepath: string, change: string) {
             system(`You are an expert programmer. Make the requested changes to the file provided.`),
             user(`:file ${filepath}`),
             assistant(appendLineNumbers(fileContents)),
-            user(`Here is the change the user wants: \n\n${change}`),
+            user(`Here is the change the user wants: \n\n${request}`),
             system(`
             Write your response as the shortest snippet possible that will make the change. 
             Do not copy-paste the rest of the file in your response.
@@ -143,7 +144,7 @@ async function _change(filepath: string, change: string) {
     await saveCodeSnippetAsProposal(filepath, fileContents, response)
 
     await askToAcceptProposal(filepath, {
-        onContinue: async () => await rewriteChange(filepath, change, await getInput("Feedback on this change? ")),
+        onContinue: async () => await rewriteChange(filepath, request, await getInput("Feedback on this change? ")),
     })
 }
 

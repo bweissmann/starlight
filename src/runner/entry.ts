@@ -1,8 +1,12 @@
 import ls from '@/fs/ls.js';
 import pretty_print_directory from '@/fs/pretty_print_directory.js';
-import { sequence } from '@/llm/chat.js';
+import read from '@/fs/read.js';
+import parse_draft_into_snippets from '@/implement/bits/parse_draft_into_snippets.js';
+import { execute, sequence } from '@/llm/chat.js';
 import { g4 } from '@/llm/utils.js';
 import { change, file } from '@/programs.js';
+import { subsequenceMatch } from '@/tools/search.js';
+import { logger } from '@/utils.js';
 import 'dotenv/config';
 
 /*
@@ -20,20 +24,13 @@ Top Level Tasks:
   > document every file in the codebase
 */
 
-change(
-  'search',
-  `
-  Implement a function subsequenceMatch(query: string, candidate: string):boolean
-
-  Which uses subsequence search:
-
-  Given two sequences:
-Main sequence: A = "ABCD"
-Sub-sequence: B = "AC"
-B is a subsequence of A because you can delete "B" and "D" from A and get B without changing the order of the remaining elements.
-
-  `
-)
+// sequence([
+//   g4(`Come up with a few unit tests for this function. Use assert and console.log, no testing framework: 
+  
+//   ${await read(await file('search'))}`)
+// ]).then(res => execute(parse_draft_into_snippets(res.message)))
+// .then(res => res.snippets.map(snippet => snippet.code).join('\n'))
+// .then(logger())
 
 /*
 WORKING STACK:
