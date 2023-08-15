@@ -3,6 +3,7 @@ import pretty_print_directory from '@/fs/pretty_print_directory.js';
 import read from '@/fs/read.js';
 import parse_draft_into_snippets from '@/implement/bits/parse_draft_into_snippets.js';
 import { execute, sequence } from '@/llm/chat.js';
+import { parseTripleHashtags } from '@/llm/parser/triple-hashtag.js';
 import { g4 } from '@/llm/utils.js';
 import { change, file } from '@/programs.js';
 import { subsequenceMatch } from '@/tools/search.js';
@@ -17,6 +18,9 @@ Top Level Tasks:
 
 - in utils/pricing make input and output optional, default to []
  
+- sometimes it writes multiple chunks, like it will write an import and a function but skip stuff in the middle.
+  > so for this we need better replace logic than 'pick one contiguous chunk of lines'
+
 - documentation
   > document every file in the codebase
 
@@ -24,7 +28,7 @@ Top Level Tasks:
   > maybe we can hotswap .proposal and .current and compile?
 */
 
-sequence([
+const steps = await sequence([
   g4([
     `
     # Introduction
@@ -53,9 +57,22 @@ sequence([
     Come up with a step-by-step plan to accomplish this task.
     Each step should be either a tool-use or an step that can be done with just your own read/write processing.
     If the step is a read/write step, then explain what information you will read and where you will write down your output
+
+    For each step i, resond with the following format:
+    ### Step i
+    \`\`\`json
+    {
+      "tool": <tool or "none">,
+      "description": <description>,
+      
+    }
+    \`\`\`
+
     `
   ])
-])
+]).then(parseTripleHashtags)
+
+console.log(steps)
 
 // sequence([
 //   g4([

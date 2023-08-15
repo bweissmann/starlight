@@ -12,7 +12,7 @@ import read, { fileExists } from './fs/read.js';
 import ls from './fs/ls.js';
 import { extractCodeSnippet, insertSnippetIntoFile } from './tools/code-transformer.js';
 import pretty_print_directory from './fs/pretty_print_directory.js';
-import { respondInJSONFormat } from './implement/utils.js';
+import { bensStyleGuide, respondInJSONFormat } from './implement/utils.js';
 import getInput from './tools/user_input.js';
 import { subsequenceMatch } from './tools/search.js';
 
@@ -126,11 +126,16 @@ async function _change(filepath: string, request: string) {
 
     const response = await sequence([
         g4(
-            system(`You are an expert programmer. Make the requested changes to the file provided.`),
-            user(`:file ${filepath}`),
+            system(`You are an expert programmer. Make the requested changes to the file provided.
+            ${bensStyleGuide}`),
+            user(`cat ${filepath}`),
             assistant(appendLineNumbers(fileContents)),
-            user(`Here is the change the user wants: \n\n${request}`),
+            user(request),
+            system(`Write one to two sentences to show your understanding of the issue.`)
+        ),
+        g4(
             system(`
+            Write a code snippet that will make the change.
             Write your response as the shortest snippet possible that will make the change. 
             Do not copy-paste the rest of the file in your response.
 
