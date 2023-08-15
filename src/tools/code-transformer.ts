@@ -39,7 +39,7 @@ export async function insertSnippetIntoFile(fileContents: string, code: string) 
         `),
         user('Here is the file'),
         assistant(fileContents.trim().length === 0 ? "<empty file>" : contentLined),
-        user('Here is the patch'),
+        user('Here is the snippet'),
         assistant(code),
     ]
 

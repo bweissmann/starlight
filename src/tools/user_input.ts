@@ -1,7 +1,6 @@
 import { createInterface } from "readline";
-import { consoleLogDiff } from "./diff.js";
 
-export default async function getInput(prompt: string) {
+export default async function getInput(prompt: string = "> ") {
     const reader = createInterface({
         input: process.stdin,
         output: process.stdout,

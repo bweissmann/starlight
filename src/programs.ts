@@ -19,6 +19,25 @@ import { subsequenceMatch } from './tools/search.js';
 /** Attempt to get a file by name in the src directory. */
 export async function file(_name: MaybePromise<string>) {
     const name = await _name
+
+    async function askForPathAmongOptions(options: string[], name: string) {
+        return execute(query<{ path: string }>({
+            name: "Get File By Name",
+            jsonSpec: `{ path: string }`,
+            messages: (jsonSpec) => [
+                pretty_print_directory(options),
+                `the user is asking for a filepath, but they are being vague about the name.
+                The file they want is somewhere in this directory structure. What are the options for what they might be asking for?
+                Here is the name they provided: "${name}".
+    
+                If the file exists in directory "dir" and also in "dir/.proposal", then pick the one in the root directory, not the proposal directory.
+                Do not use .proposal files unless necessary. 
+                
+                ${respondInJSONFormat(jsonSpec)}`
+            ],
+        })).then(({ path }) => path)
+    }
+
     const dirs = (await ls('./src')).filter(file => !file.includes('.proposal'));
 
     // prefer an exact match
@@ -38,24 +57,6 @@ export async function file(_name: MaybePromise<string>) {
 
     const options = subsequenceMatches.length > 0 ? subsequenceMatches : dirs;
     return askForPathAmongOptions(options, name)
-}
-
-async function askForPathAmongOptions(options: string[], name: string) {
-    return execute(query<{ path: string }>({
-        name: "Get File By Name",
-        jsonSpec: `{ path: string }`,
-        messages: (jsonSpec) => [
-            pretty_print_directory(options),
-            `the user is asking for a filepath, but they are being vague about the name.
-            The file they want is somewhere in this directory structure. What are the options for what they might be asking for?
-            Here is the name they provided: "${name}".
-
-            If the file exists in directory "dir" and also in "dir/.proposal", then pick the one in the root directory, not the proposal directory.
-            Do not use .proposal files unless necessary. 
-            
-            ${respondInJSONFormat(jsonSpec)}`
-        ],
-    })).then(({ path }) => path)
 }
 
 export async function writeJSONSpec(filename: string) {
