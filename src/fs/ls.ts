@@ -1,4 +1,5 @@
 import { promises as fs } from 'fs';
+import pretty_print_directory from './pretty_print_directory.js';
 
 export default async function ls(directory: string, recursive: boolean = true): Promise<string[]> {
   const files: string[] = [];
@@ -20,4 +21,9 @@ export default async function ls(directory: string, recursive: boolean = true): 
 
   await readDirectory(directory);
   return files;
+}
+
+export async function lsPrettyPrint(directory: string) {
+  const files = await ls(directory);
+  return pretty_print_directory(files);
 }

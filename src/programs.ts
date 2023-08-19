@@ -3,18 +3,19 @@ import implement from './implement/main.js';
 import { appendLineNumbers, stripLineNumbers } from './understand/utils.js';
 import typescript_to_json_spec from './implement/bits/typescript_to_json_spec.js';
 import { ChatContinuationResult, chat, sequence, execute } from './llm/chat.js';
-import { g4, query, unstructured } from './llm/utils.js';
+import { g35, g4, query, unstructured } from './llm/utils.js';
 import { MaybePromise, assistant, system, user, vomit } from './utils.js';
 import parse_ts_types_from_file from './understand/parse/ts_types.js';
 import parse_top_level_functions from './understand/parse/top_level_functions.js';
 import propose, { askToAcceptProposal, proposalDiff } from './tools/propose.js';
 import read, { fileExists } from './fs/read.js';
-import ls from './fs/ls.js';
+import ls, { lsPrettyPrint } from './fs/ls.js';
 import { extractCodeSnippet, insertSnippetIntoFile } from './tools/code-transformer.js';
 import pretty_print_directory from './fs/pretty_print_directory.js';
 import { bensStyleGuide, respondInJSONFormat } from './implement/utils.js';
 import getInput from './tools/user_input.js';
 import { subsequenceMatch } from './tools/search.js';
+import parseJSON from './llm/parser/json.js';
 
 /** Attempt to get a file by name in the src directory. */
 export async function file(_name: MaybePromise<string>) {
@@ -147,7 +148,7 @@ async function _change(filepath: string, request: string) {
         ),
     ])
 
-    await saveCodeSnippetAsProposal(filepath, fileContents, response)
+    await saveCodeSnippetAsProposal(filepath, response, fileContents)
 
     await askToAcceptProposal(filepath, {
         onContinue: async () => await rewriteChange(filepath, request, await getInput("Feedback on this change? ")),
@@ -170,20 +171,22 @@ export async function rewriteChange(filename: string, originalChangeInstructions
         system(`Respond with just a code snippet, not a diff`),
     ])
 
-    await saveCodeSnippetAsProposal(filename, fileContents, response)
+    await saveCodeSnippetAsProposal(filename, response, fileContents)
 
     await askToAcceptProposal(filename, {
         onContinue: async () => await rewriteChange(filename, originalChangeInstructions + " // " + feedback, await getInput("Feedback on this change? ")),
     })
 }
 
-async function saveCodeSnippetAsProposal(filename: string, fileContents: string, input: string | ChatContinuationResult) {
+export async function saveCodeSnippetAsProposal(filename: string, input: string | ChatContinuationResult, fileContents?: string) {
+    if (fileContents === undefined) {
+        fileContents = await read(filename)
+    }
     const message = typeof input === "string" ? input : input.message
     let codeSnippet = extractCodeSnippet(message)
     if (codeSnippet.split("\n").every(line => line.match(/(\d+)\./) !== null)) {
         codeSnippet = stripLineNumbers(codeSnippet)
     }
-    console.log("codeSnippet", codeSnippet)
     const newCode = await insertSnippetIntoFile(fileContents, codeSnippet)
 
     await propose(filename, newCode)

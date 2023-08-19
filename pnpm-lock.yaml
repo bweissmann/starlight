@@ -18,8 +18,8 @@ dependencies:
     specifier: ^1.0.7
     version: 1.0.7
   openai:
-    specifier: 4.0.0-beta.6
-    version: 4.0.0-beta.6
+    specifier: 4.0.0
+    version: 4.0.0
   sqlite:
     specifier: ^5.0.1
     version: 5.0.1
@@ -916,8 +916,9 @@ packages:
       wrappy: 1.0.2
     dev: false
 
-  /openai@4.0.0-beta.6:
-    resolution: {integrity: sha512-sZscRgs6nhBgIt0qcK8XB2PGga6V0Qy9rQn/vKesox/laQDs9tMaOi6rsDhHq15aXQJPROfEB0K9SZoCuyWbSw==}
+  /openai@4.0.0:
+    resolution: {integrity: sha512-UHv70gIw20pxu9tiUueE9iS+4U4eTGiTgQr+zlJ5aX4oj6LUUp+7mBn0xAqilawftwUB/biohPth2vcZFmoNYw==}
+    hasBin: true
     dependencies:
       '@types/node': 18.17.0
       '@types/node-fetch': 2.6.4

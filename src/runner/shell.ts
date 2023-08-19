@@ -4,7 +4,7 @@ import { g35, g4 } from "@/llm/utils.js";
 import getInput from "@/tools/user_input.js";
 import { system } from "@/utils.js";
 import parseJSON from '@/llm/parser/json.js';
-import { findAndModifyFile } from './utils.js';
+import { findAndModifyFile, listProposals } from './utils.js';
 import { extractCodeSnippet } from '@/tools/code-transformer.js';
 import promptCreateEmptyFile from '@/tools/new-file.js';
 
@@ -42,7 +42,7 @@ async function repl(): Promise<void> {
 
     switch (command) {
         case 'proposals':
-            await 'unimplemented'
+            console.log(await listProposals())
             break;
         case 'create file':
             await promptCreateEmptyFile()
@@ -54,5 +54,6 @@ async function repl(): Promise<void> {
 
     return await repl(); // recursive repl
 }
+
 
 repl();

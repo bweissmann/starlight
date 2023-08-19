@@ -1,17 +1,15 @@
-import ls from '@/fs/ls.js';
-import pretty_print_directory from '@/fs/pretty_print_directory.js';
-import read from '@/fs/read.js';
-import parse_draft_into_snippets from '@/implement/bits/parse_draft_into_snippets.js';
-import { execute, sequence } from '@/llm/chat.js';
-import { parseTripleHashtags } from '@/llm/parser/triple-hashtag.js';
-import { g4 } from '@/llm/utils.js';
-import { change, file } from '@/programs.js';
-import { subsequenceMatch } from '@/tools/search.js';
-import { logger, system } from '@/utils.js';
+import { codeEditor } from '@/agents/code-editor.js';
+import { commandDrivenRepl } from '@/agents/file-explorer.js';
 import 'dotenv/config';
 
 /*
 Top Level Tasks:
+
+- experiment with a better way to write text.
+  > copy/paste seems useful
+  > insert text at location
+  > replace text block?
+
 - Move user, system, assistant from utils to llm/utils
 
 - make "create file" in /programs
@@ -28,51 +26,8 @@ Top Level Tasks:
   > maybe we can hotswap .proposal and .current and compile?
 */
 
-const steps = await sequence([
-  g4([
-    `
-    # Introduction
-    I have a source code tree that I'm working with.
-    You are an autonomous software engineering agent who accomplishes well-scoped tasks via tools.
-    As a large language model, you can only read and write in text, so everything you do needs to be text-based.
-
-    # Task
-    I want to refactor my function promptCreateEmptyFile in src/tools/new-file to use write in src/fs/write.
-
-    # Tools
-    You have access to the following tools:
-    
-    ## tree <directory>
-    > print directory tree
-    > e.g. "tree ./src" prints all the files in the repo 
-
-    ## read <file>
-    > print the contents of a file so you can read it
-
-    ## find <query> <directory>
-    > find a query string across all files in a directory
-    > similar to global search in a code editor like VSCode works
-
-    # Request
-    Come up with a step-by-step plan to accomplish this task.
-    Each step should be either a tool-use or an step that can be done with just your own read/write processing.
-    If the step is a read/write step, then explain what information you will read and where you will write down your output
-
-    For each step i, resond with the following format:
-    ### Step i
-    \`\`\`json
-    {
-      "tool": <tool or "none">,
-      "description": <description>,
-      
-    }
-    \`\`\`
-
-    `
-  ])
-]).then(parseTripleHashtags)
-
-console.log(steps)
+// await commandDrivenRepl("Lets keep track of the running cost of each gpt call in the program and log the cumulative cost at each step. I run the program via entry.ts")
+await codeEditor("./src/llm/chat.ts", "Lets keep track of the running cost of each gpt call in the program and log the cumulative cost at each step", ``)
 
 // sequence([
 //   g4([

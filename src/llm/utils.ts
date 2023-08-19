@@ -1,12 +1,11 @@
 import chalk, { ChalkInstance } from "chalk"
 import OpenAI from "openai"
-import { APIResponse } from "openai/core"
 import { Stream } from "openai/streaming"
 import { toArray, user } from "../utils.js"
 import { Tiktoken, encodingForModel } from 'js-tiktoken'
 export type ChatSpec = { model: ModelName, messages: MessageOrStr[] }
 export type ModelName = 'gpt-3.5-turbo' | 'gpt-4'
-export type Message = OpenAI.Chat.Completions.CompletionCreateParams.CreateChatCompletionRequestStreaming.Message
+export type Message = OpenAI.Chat.Completions.ChatCompletionMessage
 export type MessageOrStr = Message | string
 export type Query<Result> = { name?: string, messages: MessageOrStr[], jsonSpec: string }
 export type Unstructured = { name: string, messages: MessageOrStr[] }
@@ -42,6 +41,9 @@ export function toMessageArray(arg: MessageOrStr | MessageOrStr[]): Message[] {
 }
 
 export function logMessages(messages: Message[]) {
+    if (process.env.QUIET_LLM === 'true') {
+        return
+    }
     messages.forEach(m => {
         let fn: ChalkInstance
         switch (m.role) {
@@ -50,12 +52,12 @@ export function logMessages(messages: Message[]) {
             case "assistant": fn = chalk.blue.bold.italic; break;
             case "function": fn = chalk.red; break;
         }
-        console.log(chalk.magenta(`*** ${m.role} ***`))
+        console.log(chalk.magenta(`${m.role}`))
         m.content?.split("\n").filter(line => line.trim().length > 0).forEach(line => console.log(fn(line)))
     })
 }
 
-export async function readAndLogStream(stream: APIResponse<Stream<OpenAI.Chat.Completions.ChatCompletionChunk>>) {
+export async function readAndLogStream(stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>) {
     const parts: string[] = []
 
     for await (const part of stream) {
