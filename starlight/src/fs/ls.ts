@@ -24,6 +24,10 @@ export default async function ls(directory: string, recursive: boolean = true): 
 }
 
 export async function lsPrettyPrint(directory: string) {
-  const files = await ls(directory);
-  return pretty_print_directory(files);
+  try {
+    const files = await ls(directory);
+    return pretty_print_directory(files);
+  } catch (e) {
+    return `Could not read directory ${directory}`
+  }
 }

@@ -1,33 +1,41 @@
-import { chatYNQuestion } from "../llm/classifier.js";
-import { ChatContinuationResult, chat, sequence } from "../llm/chat.js";
-import { appendLineNumbers } from "../understand/utils.js";
-import { assistant, system, user } from "../utils.js";
-import parseJSON from "../llm/parser/json.js";
-import { g35, g4 } from "../llm/utils.js";
+import { chatYNQuestion } from "@/llm/classifier.js";
+import { ChatContinuationResult, chat, sequence, stringifyChatResult } from "@/llm/chat.js";
+import { appendLineNumbers } from "@/understand/utils.js";
+import { assistant, system, user } from "@/utils.js";
+import parseJSON from "@/llm/parser/json.js";
+import { g35, g4 } from "@/llm/utils.js";
 
-export function extractCodeSnippet(input: string | ChatContinuationResult): string {
-    return _extractCodeSnippet(typeof input === 'string' ? input : input.message)
+export function extractCodeSnippets(input: string | ChatContinuationResult): string[] {
+    return _extractCodeSnippets(stringifyChatResult(input))
 }
 
-function _extractCodeSnippet(input: string): string {
-    const startMarkerPattern = /```(\w+)/;
-    const endMarker = "```";
+function _extractCodeSnippets(input: string): string[] {
+    const lines = input.split('\n');
+    const snippets: string[] = [];
+    let withinSnippet = false;
+    let snippet = '';
 
-    const match = input.match(startMarkerPattern);
+    lines.forEach(line => {
+        if (line.startsWith('```')) {
+            if (withinSnippet) {
+                snippets.push(snippet.trim());
+                snippet = '';
+            }
+            withinSnippet = !withinSnippet;
+        } else if (withinSnippet) {
+            snippet += line + '\n';
+        }
+    });
 
-    if (!match) {
-        return input;
+    return snippets;
+}
+
+export function extractSingleCodeSnippet(input: string | ChatContinuationResult): string {
+    const snippets = extractCodeSnippets(input);
+    if (snippets.length === 0) {
+        return stringifyChatResult(input)
     }
-
-    const fullStartMarker = match[0]; // this would be ```languageName
-    const startIndex = input.indexOf(fullStartMarker);
-    const endIndex = input.indexOf(endMarker, startIndex + fullStartMarker.length);
-
-    if (startIndex === -1 || endIndex === -1) {
-        return input;
-    }
-
-    return input.substring(startIndex + fullStartMarker.length, endIndex).trim();
+    return snippets[0];
 }
 
 export async function insertSnippetIntoFile(fileContents: string, code: string) {
@@ -79,7 +87,7 @@ export async function insertSnippetIntoFile(fileContents: string, code: string) 
         `)
         )
     ])
-        .then(extractCodeSnippet)
+        .then(extractSingleCodeSnippet)
         .then(parseJSON<{ startingLine: number, endingLine: number }>)
 
     return [

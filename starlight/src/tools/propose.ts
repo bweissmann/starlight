@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import { filepath_within_subdirectory, write_to_subdirectory } from '../fs/subdirectory.js';
 import { consoleLogDiff, diff } from './diff.js';
-import { askYesNo, askYesNoContinue } from './user_input.js';
+import { askMultiChoice } from './user_input.js';
 
 /**
  * Creates a new file at: {directory}/.proposal/{filename} and writes the contents to that file.
@@ -22,6 +22,15 @@ async function acceptProposal(filepath: string): Promise<void> {
   }
 }
 
+async function rejectProposal(filepath: string): Promise<void> {
+  try {
+    await fs.unlink(proposalFilepath(filepath));
+    console.log(`Proposal ${filepath} rejected.`);
+  } catch (error) {
+    console.error(`Error rejecting proposal: ${error}`);
+  }
+}
+
 export async function proposalDiff(filepath: string) {
   return await diff(filepath, proposalFilepath(filepath))
 }
@@ -35,5 +44,10 @@ export async function askToAcceptProposal(
   { onContinue, onNo }: { onNo?: () => Promise<void>, onContinue?: () => Promise<void> } = {}
 ) {
   consoleLogDiff(await proposalDiff(filename));
-  return askYesNoContinue("Accept Changes?", { onContinue, onNo, onYes: async () => await acceptProposal(filename) })
+  return askMultiChoice("Accept Changes?", {
+    'c': onContinue,
+    'n': onNo,
+    'r': async () => await rejectProposal(filename),
+    'y': async () => await acceptProposal(filename)
+  })
 }

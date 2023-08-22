@@ -1,64 +1,35 @@
-import { codeEditor } from '@/agents/code-editor.js';
-import { commandDrivenRepl } from '@/agents/file-explorer.js';
 import 'dotenv/config';
+import { shellDriver } from '@/agents/shell-driver.js';
+import { codeDriver } from '@/agents/code-driver';
 
 /*
-Top Level Tasks:
 
-- experiment with a better way to write text.
-  > copy/paste seems useful
-  > insert text at location
-  > replace text block?
+# Top Level Tasks:
 
-- Move user, system, assistant from utils to llm/utils
+Code generation and program planning should (likely?) be completely separable tasks
+If the implementation plan is good then g35 should theoretically be able to do it
+And if the code insertion is good then we should be able to test it even with bad plans
 
-- make "create file" in /programs
+## Write in-context
+  > llms work best for in-context writing (next token)
+  > Print the prior 1-3 lines and ask it to write the rest as a 
+  > diff with + lines. Then it can close by writing the next "real" line
+  > If we already know the range, we can theoretically write the existing
+  > content with - lines
 
-- in utils/pricing make input and output optional, default to []
- 
-- sometimes it writes multiple chunks, like it will write an import and a function but skip stuff in the middle.
-  > so for this we need better replace logic than 'pick one contiguous chunk of lines'
+## Need better programmatic thinking
+  > hypothesis: the long system prompt is making it worse at thinking
+  > first goal is to get very good high level thinking, instructions & pseudocode
+  > we can either prompt engineer, or ask g4 to write a prompt for itself.
 
-- documentation
-  > document every file in the codebase
+# Future Work:
 
-- testing?
-  > maybe we can hotswap .proposal and .current and compile?
+## multi-file understanding & editing
+  > documentation per file
+  > tree-sitter, ctags, scip, llm summary
+  
+## testing / compilation errors
+  > hotswap .proposal with .current and compile/run
 */
 
-// await commandDrivenRepl("Lets keep track of the running cost of each gpt call in the program and log the cumulative cost at each step. I run the program via entry.ts")
-await codeEditor("./src/llm/chat.ts", "Lets keep track of the running cost of each gpt call in the program and log the cumulative cost at each step", ``)
-
-// sequence([
-//   g4([
-//     system(`
-//     You are an automonous software engineering agent.
-    
-//     Make a plan to accomplish the user's task.
-
-//     # Tools
-//     You have access to the following tools:
-
-//     ## tree <dir>
-//     > print directory tree
-
-//     ## cat <file>
-//     > print a file
-
-//     ## find <query> <file>
-//     > find query in file
-
-//     `),
-//     `move the function
-//     export async function file(_name: MaybePromise<string>) {
-
-//      to fs/find.ts`
-//   ])
-// ])
-
-/*
-WORKING STACK:
-1. Move user, system, assistant from utils to llm/utils
-2. implement search
-4. Change file should have a reject proposal option.
-*/
+// await shellDriver(`Make a new react project called midnight at /Users/bweissmann/startlight/midnight`)

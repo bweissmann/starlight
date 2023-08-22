@@ -21,15 +21,25 @@ export async function askYesNo(prompt: string) {
     return ['y', 'Y'].includes(answer.trim())
 }
 
-export async function askYesNoContinue<T>(prompt: string, { onContinue, onNo, onYes }: { onYes?: () => Promise<T>, onNo?: () => Promise<T>, onContinue?: () => Promise<T> }) {
-    const _prompt = prompt.endsWith(" ") ? prompt : prompt + " ";
+export async function askYesNoContinue<T>(prompt: string, { onContinue, onNo, onYes }: {
+    onYes?: () => Promise<T>,
+    onNo?: () => Promise<T>,
+    onContinue?: () => Promise<T>
+}) {
+    const choices = {
+        'y': onYes,
+        'n': onNo,
+        'c': onContinue
+    }
+    return askMultiChoice(prompt, choices);
+}
 
-    const answer = await getInput(_prompt + "(y/n/c) ").then(ans => ans.trim())
-    if (['y', 'Y'].includes(answer)) {
-        return onYes?.()
-    } else if (['c', 'C'].includes(answer)) {
-        return onContinue?.()
-    } else {
-        return onNo?.()
+export async function askMultiChoice<T>(prompt: string, choices: Record<string, (() => Promise<T>) | undefined>) {
+    const _prompt = prompt.endsWith(" ") ? prompt : prompt + " ";
+    const choicesPrompt = Object.keys(choices).join("/");
+    const answer = await getInput(_prompt + "(" + choicesPrompt + ") ").then(ans => ans.trim());
+    const choice = Object.entries(choices).find(([text, _callback]) => text.toLowerCase() === answer.toLowerCase());
+    if (choice) {
+        return await choice[1]?.();
     }
 }

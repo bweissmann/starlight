@@ -3,3 +3,4 @@ build/
 .env
 database.db
 **/.proposal/**/*
+**/.DS_Store

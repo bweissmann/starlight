@@ -1,11 +1,15 @@
 # starlight
 
-code assistant
+writes code with gpt-4
 
-tailored to my workflows / style
+## notes
 
-active work in progress
+right now there are two semi-nonfunctional agents
+- `shell-driver.ts` (navigates terminal with tree, cat, touch, mkdir)
+- `coding-driver.ts` (modifies files with insert, replace, copy/paste, delete)
 
-> this isnt spruced up or presentable in its current form -- many ideas from previous drafts haven't been deleted and are still sitting in the repo. 
+changes are written to `.proposal` directories so changes don't clobber your code:
+`src/folder/file.ts`
+`src/folder/.proposal/file.ts`
 
-MIT License - have fun with it if you want ❤️ 
+from proposals, we generate diffs and prompt the user to accept changes

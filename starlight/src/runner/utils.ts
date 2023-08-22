@@ -1,23 +1,33 @@
-import getInput from '@/tools/user_input.js';
-import { change, file, rewriteChange } from '@/programs.js';
+import getInput, { askMultiChoice, askYesNo } from '@/tools/user_input.js';
+import { rewriteChange } from '@/programs.js';
 import { fileExists } from '@/fs/read.js';
 import { askToAcceptProposal, proposalFilepath } from '@/tools/propose.js';
 import chalk from 'chalk';
 import ls from '@/fs/ls.js';
+import { getFilepath } from '@/fs/get-filepath.js';
+import { codeDriver } from '@/agents/code-driver.js';
+import { filenameOf } from '@/fs/utils.js';
 
-export async function findAndModifyFile() {
-    const filename = await file(getInput("What file do you want to change? "));
-    console.log("Using", chalk.green(filename));
+export async function findAndModifyFile(filename?: string) {
+    const filepath = filename ?? await getFilepath(getInput("What file do you want to change? "));
+    console.log("Using", chalk.green(filepath));
 
-    if (await fileExists(proposalFilepath(filename))) {
+    if (await fileExists(proposalFilepath(filepath))) {
         console.log("Proposal Found");
-        await askToAcceptProposal(filename, {
-            onContinue: async () => await rewriteChange(filename, 'unknown', await getInput("Feedback on this change? "))
+        await askToAcceptProposal(filepath, {
+            onContinue: async () => await rewriteChange(filepath, 'unknown', await getInput("Feedback on this change? "))
         });
     } else {
-        const request = await getInput("What change do you want to make? ");
-        await change(filename, request);
+        const task = await getInput("What change do you want to make? ");
+        await codeDriver(filepath, task);
     }
+
+    await askMultiChoice(`any other changes for ${filenameOf(filepath)}?`, {
+        'y': async () => {
+            await findAndModifyFile(filepath)
+        },
+        'n': async () => { }
+    })
 }
 
 export async function listProposals() {

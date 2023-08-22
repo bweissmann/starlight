@@ -1,64 +1,17 @@
-import 'dotenv/config';
 import implement from './implement/main.js';
 import { appendLineNumbers, stripLineNumbers } from './understand/utils.js';
 import typescript_to_json_spec from './implement/bits/typescript_to_json_spec.js';
 import { ChatContinuationResult, chat, sequence, execute } from './llm/chat.js';
-import { g35, g4, query, unstructured } from './llm/utils.js';
+import { g4, unstructured } from './llm/utils.js';
 import { MaybePromise, assistant, system, user, vomit } from './utils.js';
 import parse_ts_types_from_file from './understand/parse/ts_types.js';
 import parse_top_level_functions from './understand/parse/top_level_functions.js';
 import propose, { askToAcceptProposal, proposalDiff } from './tools/propose.js';
 import read, { fileExists } from './fs/read.js';
-import ls, { lsPrettyPrint } from './fs/ls.js';
-import { extractCodeSnippet, insertSnippetIntoFile } from './tools/code-transformer.js';
-import pretty_print_directory from './fs/pretty_print_directory.js';
-import { bensStyleGuide, respondInJSONFormat } from './implement/utils.js';
+import { extractSingleCodeSnippet, insertSnippetIntoFile } from './tools/code-snippets.js';
+import { bensStyleGuide } from './implement/utils.js';
 import getInput from './tools/user_input.js';
-import { subsequenceMatch } from './tools/search.js';
-import parseJSON from './llm/parser/json.js';
-
-/** Attempt to get a file by name in the src directory. */
-export async function file(_name: MaybePromise<string>) {
-    const name = await _name
-
-    async function askForPathAmongOptions(options: string[], name: string) {
-        return execute(query<{ path: string }>({
-            name: "Get File By Name",
-            jsonSpec: `{ path: string }`,
-            messages: (jsonSpec) => [
-                pretty_print_directory(options),
-                `the user is asking for a filepath, but they are being vague about the name.
-                The file they want is somewhere in this directory structure. What are the options for what they might be asking for?
-                Here is the name they provided: "${name}".
-    
-                If the file exists in directory "dir" and also in "dir/.proposal", then pick the one in the root directory, not the proposal directory.
-                Do not use .proposal files unless necessary. 
-                
-                ${respondInJSONFormat(jsonSpec)}`
-            ],
-        })).then(({ path }) => path)
-    }
-
-    const dirs = (await ls('./src')).filter(file => !file.includes('.proposal'));
-
-    // prefer an exact match
-    const exactMatches = dirs.filter(file => file.includes(name))
-    if (exactMatches.length === 1) {
-        return exactMatches[0]
-    } else if (exactMatches.length > 1) {
-        return askForPathAmongOptions(exactMatches, name)
-    }
-
-    // No exact matches
-    const nameNoWhitespace = name.replace(/\s/g, '')
-    const subsequenceMatches = dirs.filter(file => subsequenceMatch(nameNoWhitespace, file))
-    if (subsequenceMatches.length === 1) {
-        return subsequenceMatches[0]
-    }
-
-    const options = subsequenceMatches.length > 0 ? subsequenceMatches : dirs;
-    return askForPathAmongOptions(options, name)
-}
+import { getFilepath } from './fs/get-filepath.js';
 
 export async function writeJSONSpec(filename: string) {
     const rawFile = await read(filename)
@@ -118,7 +71,7 @@ export async function change(filenameOrFilepath: MaybePromise<string>, request: 
     if (await fileExists(filenameOrFilepath)) {
         return _change(filenameOrFilepath, request)
     } else {
-        return _change(await file(filenameOrFilepath), request)
+        return _change(await getFilepath(filenameOrFilepath), request)
     }
 }
 
@@ -183,7 +136,7 @@ export async function saveCodeSnippetAsProposal(filename: string, input: string 
         fileContents = await read(filename)
     }
     const message = typeof input === "string" ? input : input.message
-    let codeSnippet = extractCodeSnippet(message)
+    let codeSnippet = extractSingleCodeSnippet(message)
     if (codeSnippet.split("\n").every(line => line.match(/(\d+)\./) !== null)) {
         codeSnippet = stripLineNumbers(codeSnippet)
     }

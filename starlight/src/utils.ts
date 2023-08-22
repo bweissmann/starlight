@@ -21,7 +21,6 @@ export function vomit(x: any) {
   return JSON.stringify(sort(x));
 }
 
-
 export function system(content: string): Message {
   return { role: 'system', content }
 }
