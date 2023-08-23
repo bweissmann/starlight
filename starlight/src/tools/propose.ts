@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import { filepath_within_subdirectory, write_to_subdirectory } from '../fs/subdirectory.js';
 import { consoleLogDiff, diff } from './diff.js';
 import { askMultiChoice } from './user_input.js';
+import path from 'path';
 
 /**
  * Creates a new file at: {directory}/.proposal/{filename} and writes the contents to that file.
@@ -25,9 +26,18 @@ async function acceptProposal(filepath: string): Promise<void> {
 async function rejectProposal(filepath: string): Promise<void> {
   try {
     await fs.unlink(proposalFilepath(filepath));
+    await cleanUpProposalDirectory(filepath);
     console.log(`Proposal ${filepath} rejected.`);
   } catch (error) {
     console.error(`Error rejecting proposal: ${error}`);
+  }
+}
+
+export async function cleanUpProposalDirectory(filepath: string) {
+  const proposalDirectory = path.join(path.dirname(filepath), '.proposal')
+  const isProposalDirectoryEmpty = (await fs.readdir(proposalDirectory)).length === 0;
+  if (isProposalDirectoryEmpty) {
+    await fs.rmdir(proposalDirectory);
   }
 }
 
@@ -45,8 +55,8 @@ export async function askToAcceptProposal(
 ) {
   consoleLogDiff(await proposalDiff(filename));
   return askMultiChoice("Accept Changes?", {
-    'c': onContinue,
-    'n': onNo,
+    'c': onContinue ?? (async () => { }),
+    'n': onNo ?? (async () => { }),
     'r': async () => await rejectProposal(filename),
     'y': async () => await acceptProposal(filename)
   })

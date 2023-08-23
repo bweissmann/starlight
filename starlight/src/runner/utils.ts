@@ -1,4 +1,4 @@
-import getInput, { askMultiChoice, askYesNo } from '@/tools/user_input.js';
+import getInput, { askMultiChoice } from '@/tools/user_input.js';
 import { rewriteChange } from '@/programs.js';
 import { fileExists } from '@/fs/read.js';
 import { askToAcceptProposal, proposalFilepath } from '@/tools/propose.js';

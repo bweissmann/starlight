@@ -4,3 +4,4 @@ build/
 database.db
 **/.proposal/**/*
 **/.DS_Store
+**/.starlight/local
