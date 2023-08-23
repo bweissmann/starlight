@@ -36,3 +36,4 @@ And if the code insertion is good then we should be able to test it even with ba
 ## testing / compilation errors
   > hotswap .proposal with .current and compile/run
 */
+await zshDriver(`zsh: permission denied: ./scripts/s -- can check the permissions?`)

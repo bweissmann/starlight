@@ -29,7 +29,7 @@ export default async function tree(rootDirectory: string, filterByGitignore: boo
             if (stats.isDirectory()) {
                 await readDirectory(fullPath);
             } else {
-                files.push(fullPath);
+                files.push(path.relative(rootDirectory, fullPath));
             }
         }
     }
@@ -41,7 +41,7 @@ export default async function tree(rootDirectory: string, filterByGitignore: boo
 export async function treePrettyPrint(directory: string) {
     try {
         const files = await tree(directory);
-        return pretty_print_directory(files);
+        return pretty_print_directory(files, directory);
     } catch (e) {
         return `Could not read directory ${directory}`
     }

@@ -60,9 +60,6 @@ async function pause(message?: string) {
 async function interpretAndExecute(input: CommandInput): Promise<string> {
     switch (input.command) {
         case 'tree':
-            if (!input.args[0].includes('src')) {
-                return 'access denied: can only tree within `./src` '
-            }
             return await treePrettyPrint(input.args[0]);
         case 'cat':
             try {
@@ -94,7 +91,8 @@ async function proposeCommands(commands: string[]) {
 
     return await askMultiChoice<string>(`Run commands?`, {
         'y': async () => {
-            return await dangerouslyExecuteTerminalCommands(filepath)
+            const output = await dangerouslyExecuteTerminalCommands(filepath)
+            return output.trim().length > 0 ? output : 'command finished with no stdout'
         },
         'n': async () => 'the user decided not to run the commands. you can re-ask the user if they want to run them or if they want to modify them'
     })

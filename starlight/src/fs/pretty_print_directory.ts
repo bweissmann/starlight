@@ -5,8 +5,8 @@ interface Directory {
     children: Directory[];
 }
 
-function createDirectoryStructure(paths: string[]): Directory {
-    const directoryStructure: Directory = { children: [] };
+function createDirectoryStructure(paths: string[], root?: string): Directory {
+    const directoryStructure: Directory = { name: root, children: [] };
 
     for (const _path of paths) {
         const directories = _path.split(path.sep);
@@ -33,7 +33,7 @@ function printDirectoryStructure(directoryStructure: Directory, indent: string =
         return printDirectoryStructure(child, indent, prefix);
     }
 
-    const nameOutput = `${indent}- ${namePrefix}${directoryStructure.name}`;
+    const nameOutput = `${indent}- ${namePrefix}${directoryStructure.name ?? ''}`;
     const childrenOutput = directoryStructure.children.map(child => {
         return printDirectoryStructure(child, indent + '   |');
     })
@@ -41,7 +41,7 @@ function printDirectoryStructure(directoryStructure: Directory, indent: string =
     return [nameOutput, ...childrenOutput].join('\n');
 }
 
-export default function pretty_print_directory(paths: string[]): string {
-    const directoryStructure = createDirectoryStructure(paths);
+export default function pretty_print_directory(paths: string[], root?: string): string {
+    const directoryStructure = createDirectoryStructure(paths, root);
     return printDirectoryStructure(directoryStructure);
 }

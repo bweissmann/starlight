@@ -3,12 +3,11 @@ import { rewriteChange } from '@/programs.js';
 import { fileExists } from '@/fs/read.js';
 import { askToAcceptProposal, proposalFilepath } from '@/tools/propose.js';
 import chalk from 'chalk';
-import ls from '@/fs/tree.js';
 import { getFilepath } from '@/fs/get-filepath.js';
 import { codeDriver } from '@/agents/code-driver-by-line-number.js';
 import { filenameOf } from '@/fs/utils.js';
 
-export async function findAndModifyFile(filename?: string) {
+export async function modifyFile(filename?: string) {
     const filepath = filename ?? await getFilepath(getInput("What file do you want to change? "));
     console.log("Using", chalk.green(filepath));
 
@@ -24,7 +23,7 @@ export async function findAndModifyFile(filename?: string) {
 
     await askMultiChoice(`any other changes for ${filenameOf(filepath)}?`, {
         'y': async () => {
-            await findAndModifyFile(filepath)
+            await modifyFile(filepath)
         },
         'n': async () => { }
     })

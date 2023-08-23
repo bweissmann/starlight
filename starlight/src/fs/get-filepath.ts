@@ -6,6 +6,8 @@ import pretty_print_directory from '@/fs/pretty_print_directory.js';
 import { subsequenceMatch } from '@/tools/search.js';
 import { extractPossibleCodeSnippet } from '@/tools/source-code-utils.js';
 import asJSON from '@/llm/parser/json.js';
+import path from 'path';
+import dedent from 'dedent';
 
 /** Attempt to get a file by name in the src directory. */
 export async function getFilepath(_name: MaybePromise<string>) {
@@ -15,7 +17,8 @@ export async function getFilepath(_name: MaybePromise<string>) {
         return chat(
             [
                 pretty_print_directory(options),
-                `the user is asking for a filepath, but there isn't a single filename that matches the name they provided.
+                dedent`
+                the user is asking for a filepath, but there isn't a single filename that matches the name they provided.
                 The file they want is somewhere in this directory structure. What is the most likely filepath they are asking for?
                 
                 Here is the name they provided: "${name}".
@@ -31,10 +34,10 @@ export async function getFilepath(_name: MaybePromise<string>) {
         )
             .then(extractPossibleCodeSnippet)
             .then(asJSON<{ path: string }>)
-            .then(({ path }) => path)
+            .then((result) => path.resolve(result.path))
     }
 
-    const dirs = (await tree('./src')).filter(file => !file.includes('.proposal'));
+    const dirs = (await tree('.')).filter(file => !file.includes('.proposal'));
 
     // prefer an exact match
     const exactMatches = dirs.filter(file => file.includes(name))

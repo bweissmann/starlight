@@ -3,7 +3,7 @@ import { sequence } from "@/llm/chat.js";
 import { g35, system } from "@/llm/utils.js";
 import getInput from "@/tools/user_input.js";
 import asJSON from '@/llm/parser/json.js';
-import { findAndModifyFile } from './utils.js';
+import { modifyFile } from './utils.js';
 import promptCreateEmptyFile from '@/tools/new-file.js';
 import chalk from 'chalk';
 import path from 'path';
@@ -62,7 +62,7 @@ async function repl(projectDirectory: string): Promise<void> {
             await promptCreateEmptyFile()
             break;
         case 'modify file':
-            await findAndModifyFile()
+            await modifyFile()
             break;
     }
 

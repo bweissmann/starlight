@@ -1,4 +1,4 @@
 import 'dotenv/config';
-import { findAndModifyFile } from './utils.js';
+import { modifyFile } from './utils.js';
 
-findAndModifyFile()
+modifyFile()
