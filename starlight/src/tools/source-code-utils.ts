@@ -1,9 +1,8 @@
 import { chatYNQuestion } from "@/llm/classifier.js";
 import { ChatContinuationResult, chat, sequence, stringifyChatResult } from "@/llm/chat.js";
-import { appendLineNumbers } from "@/understand/utils.js";
-import { assistant, system, user } from "@/utils.js";
-import parseJSON from "@/llm/parser/json.js";
-import { g35, g4 } from "@/llm/utils.js";
+
+import asJSON from "@/llm/parser/json.js";
+import { g35, g4, system, user, assistant } from "@/llm/utils.js";
 
 export function extractCodeSnippets(input: string | ChatContinuationResult): string[] {
     return _extractCodeSnippets(stringifyChatResult(input))
@@ -30,7 +29,7 @@ function _extractCodeSnippets(input: string): string[] {
     return snippets;
 }
 
-export function extractSingleCodeSnippet(input: string | ChatContinuationResult): string {
+export function extractPossibleCodeSnippet(input: string | ChatContinuationResult): string {
     const snippets = extractCodeSnippets(input);
     if (snippets.length === 0) {
         return stringifyChatResult(input)
@@ -87,8 +86,8 @@ export async function insertSnippetIntoFile(fileContents: string, code: string) 
         `)
         )
     ])
-        .then(extractSingleCodeSnippet)
-        .then(parseJSON<{ startingLine: number, endingLine: number }>)
+        .then(extractPossibleCodeSnippet)
+        .then(asJSON<{ startingLine: number, endingLine: number }>)
 
     return [
         fileContents.split("\n").slice(0, startingLine - 1).join("\n"),
@@ -96,4 +95,17 @@ export async function insertSnippetIntoFile(fileContents: string, code: string) 
         fileContents.split("\n").slice(endingLine).join("\n")
     ].join("\n")
 
+}
+
+export function appendLineNumbers(input: string): string {
+    const lines = input.split('\n');
+    const numberedLines = lines.map((line, index) => `${index + 1}. ${line}`);
+    return numberedLines.join('\n');
+}
+
+export function stripLineNumbers(input: string): string {
+    return input
+        .split('\n')
+        .map(line => line.replace(/^\d+.\s?/, ''))
+        .join('\n');
 }

@@ -1,15 +1,13 @@
 import read, { readOrEmptyString } from "@/fs/read.js";
 import { sequence } from "@/llm/chat.js";
-import parseJSON from "@/llm/parser/json.js";
-import { parseTripleHashtags } from "@/llm/parser/triple-hashtag.js";
-import { g4 } from "@/llm/utils.js";
+import asJSON from "@/llm/parser/json.js";
+import { asTripleHashtagList } from "@/llm/parser/triple-hashtag.js";
+import { g4, assistant, system } from "@/llm/utils.js";
 import { rewriteChange } from "@/programs.js";
-import { extractCodeSnippets, extractSingleCodeSnippet } from "@/tools/code-snippets.js";
+import { appendLineNumbers, extractCodeSnippets, extractPossibleCodeSnippet } from "@/tools/source-code-utils.js";
 import { consoleLogDiff } from "@/tools/diff.js";
 import propose, { askToAcceptProposal, proposalDiff, proposalFilepath } from "@/tools/propose.js";
 import getInput from "@/tools/user_input.js";
-import { appendLineNumbers } from "@/understand/utils.js";
-import { assistant, system } from "@/utils.js";
 import chalk from "chalk";
 
 type Command = {
@@ -37,6 +35,7 @@ type Command = {
         "end-line-number": number,
     }
 }
+
 export async function codeDriver(filename: string, task: string, projectDirectory?: string) {
     const initialresponse = await sequence([
         g4(
@@ -153,14 +152,14 @@ export async function codeDriver(filename: string, task: string, projectDirector
             Before each tool invokation, write the delimiter "### Step [i]"`
         )
     ])
-    const steps = (await parseTripleHashtags(initialresponse.message))
+    const steps = (await asTripleHashtagList(initialresponse.message))
         .map(r => r.content)
         .map(extractCodeSnippets)
 
     for (let i = 0; i < steps.length; i++) {
         const step = steps[i]
         const currentFileContents = i === 0 ? await read(filename) : await read(proposalFilepath(filename))
-        const command = await parseJSON<Command>(step[0])
+        const command = await asJSON<Command>(step[0])
         switch (command.command) {
             case "copy/paste":
                 break;
@@ -269,7 +268,7 @@ ${appendLineNumbers(newContent)}
             `
         )
     ])
-        .then(extractSingleCodeSnippet)
-        .then(parseJSON<{ "start-line-number": number, "end-line-number": number }>)
+        .then(extractPossibleCodeSnippet)
+        .then(asJSON<{ "start-line-number": number, "end-line-number": number }>)
         .then(result => ({ start: result['start-line-number'], end: result["end-line-number"] }))
 }

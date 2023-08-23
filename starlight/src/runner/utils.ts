@@ -5,7 +5,7 @@ import { askToAcceptProposal, proposalFilepath } from '@/tools/propose.js';
 import chalk from 'chalk';
 import ls from '@/fs/ls.js';
 import { getFilepath } from '@/fs/get-filepath.js';
-import { codeDriver } from '@/agents/code-driver.js';
+import { codeDriver } from '@/agents/code-driver-by-line-number.js';
 import { filenameOf } from '@/fs/utils.js';
 
 export async function findAndModifyFile(filename?: string) {

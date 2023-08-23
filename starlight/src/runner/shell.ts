@@ -1,9 +1,8 @@
 import 'dotenv/config';
 import { sequence } from "@/llm/chat.js";
-import { g35, g4 } from "@/llm/utils.js";
+import { g35, system } from "@/llm/utils.js";
 import getInput from "@/tools/user_input.js";
-import { system } from "@/utils.js";
-import parseJSON from '@/llm/parser/json.js';
+import asJSON from '@/llm/parser/json.js';
 import { findAndModifyFile, listProposals } from './utils.js';
 import promptCreateEmptyFile from '@/tools/new-file.js';
 
@@ -45,7 +44,7 @@ async function repl(): Promise<void> {
             input
         )
     ])
-        .then(parseJSON<{ command: 'proposals' | 'create file' | 'modify file' }>)
+        .then(asJSON<{ command: 'proposals' | 'create file' | 'modify file' }>)
         .then(parsed => parsed.command);
 
     switch (command) {

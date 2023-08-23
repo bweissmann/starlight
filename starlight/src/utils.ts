@@ -1,5 +1,4 @@
 import { ChalkInstance } from "chalk";
-import { Message } from "./llm/utils.js";
 
 function sort<T extends object | any[]>(x: T): T {
   if (typeof x === 'undefined' || x === null) {
@@ -18,19 +17,8 @@ function sort<T extends object | any[]>(x: T): T {
 }
 
 export function vomit(x: any) {
+  
   return JSON.stringify(sort(x));
-}
-
-export function system(content: string): Message {
-  return { role: 'system', content }
-}
-
-export function user(content: string): Message {
-  return { role: 'user', content }
-}
-
-export function assistant(content: string): Message {
-  return { role: 'assistant', content }
 }
 
 export function cast<T>(x: any): T {

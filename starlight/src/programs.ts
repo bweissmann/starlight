@@ -1,87 +1,30 @@
-import implement from './implement/main.js';
-import { appendLineNumbers, stripLineNumbers } from './understand/utils.js';
-import typescript_to_json_spec from './implement/bits/typescript_to_json_spec.js';
-import { ChatContinuationResult, chat, sequence, execute } from './llm/chat.js';
-import { g4, unstructured } from './llm/utils.js';
-import { MaybePromise, assistant, system, user, vomit } from './utils.js';
-import parse_ts_types_from_file from './understand/parse/ts_types.js';
-import parse_top_level_functions from './understand/parse/top_level_functions.js';
+import { ChatContinuationResult, chat, sequence } from './llm/chat.js';
+import { g4, system, assistant, user } from './llm/utils.js';
+import { MaybePromise } from './utils.js';
 import propose, { askToAcceptProposal, proposalDiff } from './tools/propose.js';
 import read, { fileExists } from './fs/read.js';
-import { extractSingleCodeSnippet, insertSnippetIntoFile } from './tools/code-snippets.js';
-import { bensStyleGuide } from './implement/utils.js';
+import { appendLineNumbers, extractPossibleCodeSnippet, insertSnippetIntoFile, stripLineNumbers } from './tools/source-code-utils.js';
 import getInput from './tools/user_input.js';
 import { getFilepath } from './fs/get-filepath.js';
+import { loadProjectStyleGuide } from './project/loaders.js';
 
-export async function writeJSONSpec(filename: string) {
-    const rawFile = await read(filename)
-    const fileContents = appendLineNumbers(rawFile)
-
-    const ts_type = (await execute(
-        parse_ts_types_from_file(
-            fileContents
-        ))).types[0].code
-
-    const json_spec = await execute(
-        typescript_to_json_spec(
-            ts_type
-        )
-    )
-
-    const add_json_to_file = await execute(
-        unstructured({
-            name: "Add JSON Spec",
-            messages: [
-                system(`Here is the source code of a typescript file`),
-                assistant(fileContents),
-                system("Here is a JSON Spec"),
-                assistant(json_spec),
-                system(`
-                Replace the existing JSON Spec in the source file with the new one. 
-                It will be a property called "jsonSpec" in the query object. 
-                Be sure to surround the spec with backticks to its a valid js string.
-
-                Rewrite the entire file, starting at line [1] and ending at the last [line]
-                `)
-            ]
-        })
-    )
-
-    await askToAcceptProposal(filename)
-}
-
-export async function readAndWrite(filename: string) {
-    const contents = await execute(
-        parse_top_level_functions(
-            await read(filename)
-        )
-    )
-
-    implement(`
-    Implement this function in node/typescript:
-    Keep the jsdoc string.
-
-    ${vomit(contents.functions[0])}
-    `)
-}
-
-
-export async function change(filenameOrFilepath: MaybePromise<string>, request: string) {
+export async function change(filenameOrFilepath: MaybePromise<string>, request: string, projectDirectory: string) {
     filenameOrFilepath = await filenameOrFilepath
     if (await fileExists(filenameOrFilepath)) {
-        return _change(filenameOrFilepath, request)
+        return _change(filenameOrFilepath, request, projectDirectory)
     } else {
-        return _change(await getFilepath(filenameOrFilepath), request)
+        return _change(await getFilepath(filenameOrFilepath), request, projectDirectory)
     }
 }
 
-async function _change(filepath: string, request: string) {
+async function _change(filepath: string, request: string, projectDirectory: string) {
     const fileContents = await read(filepath)
 
     const response = await sequence([
         g4(
             system(`You are an expert programmer. Make the requested changes to the file provided.
-            ${bensStyleGuide}`),
+            ${await loadProjectStyleGuide(projectDirectory)}`),
+            
             user(`cat ${filepath}`),
             assistant(appendLineNumbers(fileContents)),
             user(request),
@@ -136,7 +79,7 @@ export async function saveCodeSnippetAsProposal(filename: string, input: string 
         fileContents = await read(filename)
     }
     const message = typeof input === "string" ? input : input.message
-    let codeSnippet = extractSingleCodeSnippet(message)
+    let codeSnippet = extractPossibleCodeSnippet(message)
     if (codeSnippet.split("\n").every(line => line.match(/(\d+)\./) !== null)) {
         codeSnippet = stripLineNumbers(codeSnippet)
     }

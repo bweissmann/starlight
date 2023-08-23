@@ -1,35 +1,15 @@
 import OpenAI from 'openai';
 import chalk from 'chalk';
-import { assistant, vomit } from '../utils.js';
-import { ChatSpec, Message, MessageOrStr, ModelName, Query, Unstructured, estimatePricing, logMessages, readAndLogStream, toMessageArray } from './utils.js';
+import { vomit } from '../utils.js';
+import { ChatSpec, Message, MessageOrStr, ModelName, assistant, estimatePricing, logMessages, readAndLogStream, toMessageArray } from './utils.js';
 import { cacheResult, getCachedResult } from '../db.js';
-import parseJSON from './parser/json.js';
 
 const __openai = new OpenAI(); // never use this directly, always use getOpenAI() so we can keep track of all the raw api entry points 
 export function getOpenAI() {
     return __openai
 }
 
-export async function execute<T>(query: Query<T>): Promise<T>;
-export async function execute(unstructued: Unstructured): Promise<string>;
-export async function execute<T>(param: Unstructured | Query<T>): Promise<string | T> {
-    if ("jsonSpec" in param) {
-        return executeQuery(param)
-    }
-
-    const { name, messages } = param;
-    return chat(messages, { name });
-}
-
-export async function executeQuery<T>(query: Query<T>) {
-    const raw = await chat(
-        query.messages,
-        { name: query.name },
-    )
-
-    return await parseJSON<T>(raw);
-}
-
+/* Defaults to g35 unless specified */
 export async function chat(_messages: MessageOrStr | MessageOrStr[], opts?: { name?: string, model?: ModelName }): Promise<string> {
     const messages = toMessageArray(_messages)
     const model = opts?.model ?? 'gpt-3.5-turbo';

@@ -1,15 +1,12 @@
 import chalk, { ChalkInstance } from "chalk"
 import OpenAI from "openai"
 import { Stream } from "openai/streaming"
-import { toArray, user } from "../utils.js"
+import { toArray } from "../utils.js"
 import { Tiktoken, encodingForModel } from 'js-tiktoken'
 export type ChatSpec = { model: ModelName, messages: MessageOrStr[] }
 export type ModelName = 'gpt-3.5-turbo' | 'gpt-4'
 export type Message = OpenAI.Chat.Completions.ChatCompletionMessage
 export type MessageOrStr = Message | string
-export type Query<Result> = { name?: string, messages: MessageOrStr[], jsonSpec: string }
-export type Unstructured = { name: string, messages: MessageOrStr[] }
-
 export function g4(messages: MessageOrStr[]): ChatSpec;
 export function g4(...messages: MessageOrStr[]): ChatSpec;
 export function g4(...messages: MessageOrStr[] | [MessageOrStr[]]): ChatSpec {
@@ -22,18 +19,6 @@ export function g35(...messages: MessageOrStr[]): ChatSpec;
 export function g35(...messages: MessageOrStr[] | [MessageOrStr[]]): ChatSpec {
     const flattenedMessages = (Array.isArray(messages[0]) ? messages[0] : messages) as MessageOrStr[]
     return { model: 'gpt-3.5-turbo', messages: toMessageArray(flattenedMessages) }
-}
-
-export function unstructured(unstructued: Unstructured) {
-    return unstructued
-}
-
-export function query<Result>(params: { name: string, jsonSpec: string, messages: (jsonSpec: string) => MessageOrStr[] }): Query<Result> {
-    return {
-        name: params.name,
-        jsonSpec: params.jsonSpec,
-        messages: params.messages(params.jsonSpec)
-    }
 }
 
 export function toMessageArray(arg: MessageOrStr | MessageOrStr[]): Message[] {
@@ -97,5 +82,35 @@ export function estimatePricing({ input, output }: { input: Message[], output: s
         input: inputPrice,
         output: outputPrice
     }
+}
 
+export function assembleContent(strings: any, ...values: any[]): string {
+    let content: string;
+    if (typeof strings === 'string') {
+        content = strings;
+    } else {
+        content = strings.reduce((result: string, str: string, i: number) => `${result}${str}${values[i] || ''}`, '');
+    }
+    return content;
+}
+
+export function system(content: string): Message;
+export function system(strings: TemplateStringsArray, ...values: any[]): Message;
+export function system(strings: any, ...values: any[]): Message {
+    const content = assembleContent(strings, ...values);
+    return { role: 'system', content };
+}
+
+export function user(content: string): Message;
+export function user(strings: TemplateStringsArray, ...values: any[]): Message;
+export function user(strings: any, ...values: any[]): Message {
+    const content = assembleContent(strings, ...values);
+    return { role: 'user', content };
+}
+
+export function assistant(content: string): Message;
+export function assistant(strings: TemplateStringsArray, ...values: any[]): Message;
+export function assistant(strings: any, ...values: any[]): Message {
+    const content = assembleContent(strings, ...values);
+    return { role: 'assistant', content };
 }

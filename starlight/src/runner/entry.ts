@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { shellDriver } from '@/agents/shell-driver.js';
-import { codeDriver } from '@/agents/code-driver';
+import { zshDriver } from '@/agents/zsh-driver.js';
+import { codeDriver } from '@/agents/code-driver-by-line-number';
 
 /*
 
@@ -32,4 +32,4 @@ And if the code insertion is good then we should be able to test it even with ba
   > hotswap .proposal with .current and compile/run
 */
 
-// await shellDriver(`Make a new react project called midnight at /Users/bweissmann/startlight/midnight`)
+await zshDriver(`Make a new react app called midnight at /Users/bweissmann/startlight/midnight`)
