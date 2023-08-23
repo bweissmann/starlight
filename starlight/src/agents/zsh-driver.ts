@@ -47,7 +47,6 @@ export async function zshDriver(task: string, projectDirectory?: string) {
                 g4(...previousHistoryWithoutReminder, takeaways.message, reminder)
             ])
             previousresponse = nextllmresponse;
-            await pause('about to interpret and run command')
         }
     } catch (e) {
         console.log(e)

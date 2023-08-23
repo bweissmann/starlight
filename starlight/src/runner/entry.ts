@@ -32,4 +32,4 @@ And if the code insertion is good then we should be able to test it even with ba
   > hotswap .proposal with .current and compile/run
 */
 
-await zshDriver(`Make a new react app called midnight at /Users/bweissmann/starlight/midnight`)
+await zshDriver(`Make a new react app with typescript called midnight at /Users/bweissmann/starlight/midnight`)
