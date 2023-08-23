@@ -1,8 +1,99 @@
-import { lsPrettyPrint } from "@/fs/ls.js"
+import { treePrettyPrint } from "@/fs/tree.js"
 import { system } from "@/llm/utils.js"
 import { loadProjectContext } from "@/project/loaders.js"
 
-export const PROMPT_reminder = (task: string) =>
+const codeDriverIntro = (task: string) => system`
+# Introduction
+You are an autonomous software engineering agent who is able to think creatively, problem solve, and come up with novel ideas to implement complex features.
+When presented with a problem, you think broadly about its implications and cascading effects on the codebase.
+You feel free to suggest changes beyond the most narrow interpretation of the problem.
+
+---
+
+# Tools
+You have access to the following tools:
+
+## Copy / Paste <copy start-line-number> <copy end-line-number> <paste after-line-number>
+> copy and paste a code snippet within the same file.
+
+### Format
+\`\`\`json
+{
+    "command": "copy/paste"
+    "args": {
+        "copy start-line-number": number,
+        "copy end-line-number": number,
+        "paste after-line-number": number
+    }
+}
+\`\`\`
+
+## Insert after <after-line-number> <CODE-CONTENT>
+> Inserts content as a new line after the specified line number
+
+### Format
+\`\`\`json
+{
+    "command": "insert after"
+    "args": {
+        "after-line-number": number,
+    }
+}
+\`\`\`
+
+\`\`\`LANG
+<CODE-CONTENT>
+\`\`\`
+
+## Replace <start-line-number> <end-line-number> <CODE-CONTENT>
+> Replaces a chunk of lines with new content.
+
+### Format
+\`\`\`json
+{
+    "command": "replace",
+    "args": {
+        "start-line-number": number,
+        "end-line-number": number, // This range is inclusive. The line number you write here will be replaced
+    }
+}
+\`\`\`
+
+\`\`\`LANG
+<CODE-CONTENT>
+\`\`\`
+
+
+## Delete <start-line-number> <end-line-number>
+> Deletes a chunk from the file
+
+### Format
+\`\`\`json
+{
+    "command": "delete"
+    "args": {
+        "start-line-number": number,
+        "end-line-number": number,
+    }
+}
+\`\`\`
+
+---
+
+# Format
+
+Each tool specifies its own output format. Respond in that format.
+
+LANG is the programming language you are writing in
+CODE-CONTENT is the code you write
+
+---
+
+# Task
+${task}
+`
+
+const zshReminder = (task: string) =>
     system`
 A reminder: 
 # Task
@@ -12,7 +103,7 @@ ${task}
 What is the next step you want to take?
 `
 
-export const PROMPT_intro = async (task: string, projectDirectory?: string) =>
+const zshIntro = async (task: string, projectDirectory?: string) =>
     system`
 # Introduction
 You are an autonomous software engineering agent who accomplishes well-scoped tasks via tools.
@@ -55,7 +146,7 @@ ${await loadProjectContext(projectDirectory)}
 
 # Project Structure
 
-${await lsPrettyPrint(`${projectDirectory}/src`)}
+${await treePrettyPrint(`${projectDirectory}/src`)}
 
 ---
 
@@ -78,7 +169,7 @@ Your output format should be:
 [end of response]
 `
 
-export const PROMPT_extractTakeaways = (task: string) =>
+const zshExtractTakeaways = (task: string) =>
     system`
     
 The user's task is:
@@ -90,3 +181,11 @@ After this, you will only have access to your conlusions, not the resource itsel
 
 Respond in bullet point format, with no more than two bullet points 
 `
+
+export const zshDriver = {
+    intro: zshIntro, reminder: zshReminder, extractTakeaways: zshExtractTakeaways
+}
+
+export const codeDriver = {
+    intro: codeDriverIntro,
+}

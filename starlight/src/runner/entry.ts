@@ -1,6 +1,11 @@
 import 'dotenv/config';
 import { zshDriver } from '@/agents/zsh-driver.js';
-import { codeDriver } from '@/agents/code-driver-by-line-number';
+import { codeDriver } from '@/agents/code-driver-by-line-number.js';
+import path from 'path';
+import read, { fileExists } from '@/fs/read.js';
+import ignore from 'ignore';
+import tree from '@/fs/tree.js';
+import { logger } from '@/utils.js';
 
 /*
 
@@ -31,5 +36,3 @@ And if the code insertion is good then we should be able to test it even with ba
 ## testing / compilation errors
   > hotswap .proposal with .current and compile/run
 */
-
-await zshDriver(`Make a new react app with typescript called midnight at /Users/bweissmann/starlight/midnight`)

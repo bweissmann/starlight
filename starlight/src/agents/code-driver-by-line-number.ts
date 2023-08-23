@@ -2,33 +2,41 @@ import read, { readOrEmptyString } from "@/fs/read.js";
 import { sequence } from "@/llm/chat.js";
 import asJSON from "@/llm/parser/json.js";
 import { asTripleHashtagList } from "@/llm/parser/triple-hashtag.js";
-import { g4, assistant, system } from "@/llm/utils.js";
+import { g4, assistant, system, user } from "@/llm/utils.js";
 import { rewriteChange } from "@/programs.js";
 import { appendLineNumbers, extractCodeSnippets, extractPossibleCodeSnippet } from "@/tools/source-code-utils.js";
 import { consoleLogDiff } from "@/tools/diff.js";
 import propose, { askToAcceptProposal, proposalDiff, proposalFilepath } from "@/tools/propose.js";
 import getInput from "@/tools/user_input.js";
 import chalk from "chalk";
+import { codeDriver as prompts } from './prompt.js'
+import dedent from "dedent";
 
-type Command = {
+type CopyPasteCommand = {
     "command": "copy/paste"
     "args": {
         "copy start-line-number": number,
         "copy end-line-number": number,
         "paste after-line-number": number
     }
-} | {
+}
+
+type InsertAfterCommand = {
     "command": "insert after"
     "args": {
         "after-line-number": number,
     }
-} | {
+}
+
+type ReplaceCommand = {
     "command": "replace",
     "args": {
         "start-line-number": number,
         "end-line-number": number,
     }
-} | {
+}
+
+type DeleteCommand = {
     "command": "delete"
     "args": {
         "start-line-number": number,
@@ -36,108 +44,27 @@ type Command = {
     }
 }
 
+type Command = CopyPasteCommand | InsertAfterCommand | ReplaceCommand | DeleteCommand;
+type Step = InsertStep | ReplaceStep
+
+
+type InsertStep = InsertAfterCommand & {
+    afterOriginalSnippet: string,
+    code: string
+}
+
+type ReplaceStep = ReplaceCommand & {
+    originalSnippet: string,
+    code: string
+}
+
 export async function codeDriver(filename: string, task: string, projectDirectory?: string) {
     const initialresponse = await sequence([
         g4(
-            system(`
-            # Introduction
-            You are an autonomous software engineering agent who is able to think creatively, problem solve, and come up with novel ideas to implement complex features.
-            When presented with a problem, you think broadly about its implications and cascading effects on the codebase.
-            You feel free to suggest changes beyond the most narrow interpretation of the problem.
-
-            ---
-
-            # Tools
-            You have access to the following tools:
-
-            ## Copy / Paste <copy start-line-number> <copy end-line-number> <paste after-line-number>
-            > copy and paste a code snippet within the same file.
-
-            ### Format
-            \`\`\`json
-            {
-                "command": "copy/paste"
-                "args": {
-                    "copy start-line-number": number,
-                    "copy end-line-number": number,
-                    "paste after-line-number": number
-                }
-            }
-            \`\`\`
-            
-            ## Insert after <after-line-number> <CODE-CONTENT>
-            > Inserts content as a new line after the specified line number
-
-            ### Format
-            \`\`\`json
-            {
-                "command": "insert after"
-                "args": {
-                    "after-line-number": number,
-                }
-            }
-            \`\`\`
-
-            \`\`\`LANG
-            <CODE-CONTENT>
-            \`\`\`
-
-            ## Replace <start-line-number> <end-line-number> <CODE-CONTENT>
-            > Replaces a chunk of lines with new content.
-
-            ### Format
-            \`\`\`json
-            {
-                "command": "replace",
-                "args": {
-                    "start-line-number": number,
-                    "end-line-number": number, // This range is inclusive. The line number you write here will be replaced
-                }
-            }
-            \`\`\`
-
-            \`\`\`LANG
-            <CODE-CONTENT>
-            \`\`\`
-
-
-            ## Delete <start-line-number> <end-line-number>
-            > Deletes a chunk from the file
-
-            ### Format
-            \`\`\`json
-            {
-                "command": "delete"
-                "args": {
-                    "start-line-number": number,
-                    "end-line-number": number,
-                }
-            }
-            \`\`\`
-
-            ---
-
-            # Format
-
-            Each tool specifies its own output format. Respond in that format.
-         
-            LANG is the programming language you are writing in
-            CODE-CONTENT is the code you write
-
-            ---
-
-            # Project Specific Notes
-
-            ${projectDirectory === undefined ? '' : await readOrEmptyString(`${projectDirectory}/.starlight/context.md`)}
-            
-            ---
-
-            # Task
-            ${task}
-            `),
-            `read ${filename}`,
+            prompts.intro(task),
+            user`read ${filename}`,
             assistant(await read(filename).then(appendLineNumbers)),
-            `
+            user`
             Respond in the following format
 
             # Think
@@ -152,22 +79,49 @@ export async function codeDriver(filename: string, task: string, projectDirector
             Before each tool invokation, write the delimiter "### Step [i]"`
         )
     ])
-    const steps = (await asTripleHashtagList(initialresponse.message))
-        .map(r => r.content)
-        .map(extractCodeSnippets)
+    const steps: Step[] = await Promise.all(
+        (await asTripleHashtagList(initialresponse.message))
+            .map(r => r.content)
+            .map(extractCodeSnippets)
+            .map(async raw => {
+                const command = await asJSON<Command>(raw[0])
+                const originalFileContents = await read(filename)
+                switch (command.command) {
+                    case 'copy/paste':
+                    case 'delete':
+                        throw 'unimplemented'
+                    case 'insert after':
+                        return {
+                            ...command,
+                            afterOriginalSnippet: originalFileContents
+                                .split('\n')
+                                .slice(Math.max(0, command.args["after-line-number"] - 4), command.args["after-line-number"])
+                                .join('\n'),
+                            code: raw[1]
+                        }
+                    case 'replace':
+                        return {
+                            ...command,
+                            originalSnippet: originalFileContents
+                                .split('\n')
+                                .slice(command.args["start-line-number"] - 1, command.args["end-line-number"])
+                                .join('\n'),
+                            code: raw[1]
+                        }
+                }
+            })
+    )
+
 
     for (let i = 0; i < steps.length; i++) {
         const step = steps[i]
         const currentFileContents = i === 0 ? await read(filename) : await read(proposalFilepath(filename))
-        const command = await asJSON<Command>(step[0])
-        switch (command.command) {
-            case "copy/paste":
-                break;
+        switch (step.command) {
             case "insert after":
                 const fileContentsWithInsert = [
-                    ...currentFileContents.split('\n').slice(0, command.args["after-line-number"]),
-                    step[1],
-                    ...currentFileContents.split('\n').slice(command.args["after-line-number"])
+                    ...currentFileContents.split('\n').slice(0, step.args["after-line-number"]),
+                    step.code,
+                    ...currentFileContents.split('\n').slice(step.args["after-line-number"])
                 ].join('\n')
                 await propose(filename, fileContentsWithInsert)
                 consoleLogDiff(await proposalDiff(filename));
@@ -177,16 +131,19 @@ export async function codeDriver(filename: string, task: string, projectDirector
                 let range: { start: number, end: number };
                 if (i === 0) {
                     range = {
-                        start: command.args["start-line-number"],
-                        end: command.args["end-line-number"]
+                        start: step.args["start-line-number"],
+                        end: step.args["end-line-number"]
                     }
                 } else {
-                    range = await fixLineNumbers(await read(proposalFilepath(filename)), step[1], command.args["start-line-number"], command.args["end-line-number"])
+                    range = await fixLineNumbersForReplace({
+                        currentFileContents: await read(proposalFilepath(filename)),
+                        step,
+                    })
                 }
 
                 const fileContentsWithReplace = [
                     ...currentFileContents.split('\n').slice(0, range.start - 1),
-                    step[1],
+                    step.code,
                     ...currentFileContents.split('\n').slice(range.end)
                 ].join('\n')
                 await propose(filename, fileContentsWithReplace)
@@ -194,28 +151,28 @@ export async function codeDriver(filename: string, task: string, projectDirector
 
                 await sequence([
                     g4(
-                        `Here is a unified diff of a change:
-                        
-                        ${await proposalDiff(filename)}
+`Here is a unified diff of a change:
 
-                        Does it have any mistakes?
-                        Common mistakes are:
-                        - The indentation is misaligned
-                        - It is either missing a curly brace or has an extra curly brace
-                         
-                        `
+\`\`\`diff
+${await proposalDiff(filename)}
+\`\`\`
+
+Does it have any mistakes?
+Common mistakes are:
+- The indentation is misaligned
+- It is either missing a curly brace or has an extra curly brace
+    
+`
                     )
                 ])
 
-                break
-            case "delete":
                 break;
         }
 
         if (i < steps.length - 1) {
             await getInput(`continue? (${i + 1}/${steps.length}) `)
         } else {
-            console.log(chalk.bgBlack.bold.yellow("    Done    "))
+            console.log(chalk.bgBlack.bold.yellow(`    Done adding ${steps.length}/${steps.length} steps to proposal    `))
         }
     }
 
@@ -224,15 +181,16 @@ export async function codeDriver(filename: string, task: string, projectDirector
     })
 }
 
-async function fixLineNumbers(fileContents: string, newContent: string, start: number, end: number) {
-    const fileContentsAroundChange = appendLineNumbers(fileContents)
+async function fixLineNumbersForReplace({ step, currentFileContents }: { step: ReplaceStep, currentFileContents: string }
+) {
+    const currentFileContentsAroundChange = appendLineNumbers(currentFileContents)
         .split("\n")
-        .slice(start - 10, end + 10)
+        .slice(step.args["start-line-number"] - 10, step.args["end-line-number"] + 10)
         .join("\n")
 
     return await sequence([
         g4(
-            system(`
+            system(dedent`
             The user is trying to replace a chunk of lines with new content in a source code file.
             However, the file has been edited since the user proposed their change, and the line numbers may have changed.
 
@@ -248,24 +206,30 @@ async function fixLineNumbers(fileContents: string, newContent: string, start: n
             }
             \`\`\`
             `),
-            `# Original File
-
-${fileContentsAroundChange}
-            
-            ---
-
-            # Replacement Chunk
-
-${appendLineNumbers(newContent)}
-
-            ---
-
-            # Replacement Range
-            {
-                "start-line-number": ${start},
-                "end-line-number": ${end},
-            }
             `
+# Original Snippet to Replace
+
+${step.originalSnippet}
+
+---
+
+# Replacement Chunk
+
+${step.code}
+
+---
+# Current Version of File
+
+${currentFileContentsAroundChange}
+
+---
+
+# Replacement Range
+{
+    "start-line-number": ${step.args["start-line-number"]},
+    "end-line-number": ${step.args["end-line-number"]},
+}
+`
         )
     ])
         .then(extractPossibleCodeSnippet)

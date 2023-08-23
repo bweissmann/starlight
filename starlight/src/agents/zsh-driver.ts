@@ -1,13 +1,12 @@
 import { sequence } from '@/llm/chat.js';
 import { g4 } from '@/llm/utils.js';
-import read from '@/fs/read.js';
-import { lsPrettyPrint } from '@/fs/ls.js';
+import read, { fileExists } from '@/fs/read.js';
+import { treePrettyPrint } from '@/fs/tree.js';
 import { extractCodeSnippets } from '@/tools/source-code-utils.js';
 import getInput, { askMultiChoice } from '@/tools/user_input.js';
 import asJSON from '@/llm/parser/json.js';
-import { saveCodeSnippetAsProposal } from '@/programs.js';
 import chalk from 'chalk';
-import { PROMPT_extractTakeaways, PROMPT_intro, PROMPT_reminder } from './prompt.js';
+import { zshDriver as prompts } from './prompt.js';
 import propose, { cleanUpProposalDirectory, proposalFilepath } from '@/tools/propose.js';
 import { spawn } from 'child_process';
 import dedent from 'dedent';
@@ -18,9 +17,9 @@ import path from 'path';
 type CommandInput = { command: 'tree' | 'cat' | 'modify' | 'quit' | 'propose', args: string[] }
 
 export async function zshDriver(task: string, projectDirectory?: string) {
-    const intro = await PROMPT_intro(task, projectDirectory)
-    const reminder = PROMPT_reminder(task)
-    const extractTakeaways = PROMPT_extractTakeaways(task)
+    const intro = await prompts.intro(task, projectDirectory)
+    const reminder = prompts.reminder(task)
+    const extractTakeaways = prompts.extractTakeaways(task)
 
     const initialresponse = await sequence([
         g4([
@@ -64,7 +63,7 @@ async function interpretAndExecute(input: CommandInput): Promise<string> {
             if (!input.args[0].includes('src')) {
                 return 'access denied: can only tree within `./src` '
             }
-            return await lsPrettyPrint(input.args[0]);
+            return await treePrettyPrint(input.args[0]);
         case 'cat':
             try {
                 return await read(input.args[0]);
@@ -77,9 +76,6 @@ async function interpretAndExecute(input: CommandInput): Promise<string> {
             return await proposeCommands(input.args)
         case 'modify':
             throw 'asked to modify file: unimplemented'
-
-            await saveCodeSnippetAsProposal(input.args[0], input.args[1])
-            return `Made a proposal change at ${input.args[0]}`
     }
 }
 
@@ -114,17 +110,15 @@ async function dangerouslyExecuteTerminalCommands(filepath: string) {
         output += result;
         if (i < commands.length - 1) {
             await pause(`Executed ${i + 1}/${commands.length}`);
-
         }
     }
     // Move the proposal file to a completed directory after executing all commands
     await fs.mkdir(path.join(path.dirname(filepath), '.completed'), { recursive: true });
     const completedFilepath = filepath_within_subdirectory(filepath, '.completed')
     const date = new Date();
-    try {
-        await fs.access(completedFilepath);
+    if (await fileExists(completedFilepath)) {
         await fs.appendFile(completedFilepath, `\n${date.toISOString()}\n` + fileContents);
-    } catch (error) {
+    } else {
         await fs.writeFile(completedFilepath, `${date.toISOString()}\n` + fileContents);
     }
     await fs.rm(proposalFilepath(filepath))

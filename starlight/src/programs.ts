@@ -7,8 +7,10 @@ import { appendLineNumbers, extractPossibleCodeSnippet, insertSnippetIntoFile, s
 import getInput from './tools/user_input.js';
 import { getFilepath } from './fs/get-filepath.js';
 import { loadProjectStyleGuide } from './project/loaders.js';
+import chalk from 'chalk';
 
 export async function change(filenameOrFilepath: MaybePromise<string>, request: string, projectDirectory: string) {
+    await getInput(chalk.bgRed.white.bold("** Using Legacy Change System"))
     filenameOrFilepath = await filenameOrFilepath
     if (await fileExists(filenameOrFilepath)) {
         return _change(filenameOrFilepath, request, projectDirectory)
@@ -52,6 +54,7 @@ async function _change(filepath: string, request: string, projectDirectory: stri
 }
 
 export async function rewriteChange(filename: string, originalChangeInstructions: string, feedback: string) {
+    await getInput(chalk.bgRed.white.bold("** Using Legacy Rewrite System"))
     const fileContents = await read(filename)
 
     const response = await chat([

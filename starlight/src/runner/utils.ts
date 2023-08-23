@@ -3,7 +3,7 @@ import { rewriteChange } from '@/programs.js';
 import { fileExists } from '@/fs/read.js';
 import { askToAcceptProposal, proposalFilepath } from '@/tools/propose.js';
 import chalk from 'chalk';
-import ls from '@/fs/ls.js';
+import ls from '@/fs/tree.js';
 import { getFilepath } from '@/fs/get-filepath.js';
 import { codeDriver } from '@/agents/code-driver-by-line-number.js';
 import { filenameOf } from '@/fs/utils.js';
@@ -28,8 +28,4 @@ export async function findAndModifyFile(filename?: string) {
         },
         'n': async () => { }
     })
-}
-
-export async function listProposals() {
-    return (await ls('./src')).filter(f => f.includes('.proposal'))
 }

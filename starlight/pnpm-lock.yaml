@@ -17,6 +17,9 @@ dependencies:
   dotenv:
     specifier: ^16.3.1
     version: 16.3.1
+  ignore:
+    specifier: ^5.2.4
+    version: 5.2.4
   js-tiktoken:
     specifier: ^1.0.7
     version: 1.0.7
@@ -599,6 +602,11 @@ packages:
 
   /ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
+    dev: false
+
+  /ignore@5.2.4:
+    resolution: {integrity: sha512-MAb38BcSbH0eHNBxn7ql2NH/kX33OkB3lZ1BNdh7ENeRChHTYsTvWrMubiIAMNS2llXEEgZ1MUOBtXChP3kaFQ==}
+    engines: {node: '>= 4'}
     dev: false
 
   /imurmurhash@0.1.4:

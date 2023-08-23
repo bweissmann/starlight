@@ -3,17 +3,22 @@ import { sequence } from "@/llm/chat.js";
 import { g35, system } from "@/llm/utils.js";
 import getInput from "@/tools/user_input.js";
 import asJSON from '@/llm/parser/json.js';
-import { findAndModifyFile, listProposals } from './utils.js';
+import { findAndModifyFile } from './utils.js';
 import promptCreateEmptyFile from '@/tools/new-file.js';
+import chalk from 'chalk';
+import path from 'path';
+import process from 'process';
 
-async function repl(): Promise<void> {
+async function repl(projectDirectory: string): Promise<void> {
+    console.log(chalk.green(`Working project ${projectDirectory}`))
+
     const hardcodeAliases: Record<string, string[]> = {
-        'proposals': ['proposals', 'p', 'show proposals', 'proposal'],
+        'project': ['project', 'p', 'switch', 'change project', 'use project'],
         'create file': ['create file', 'c', 'new file', 'create', 'create a file'],
         'modify file': ['modify file', 'm', 'modify', 'edit', 'edit file']
     };
 
-    const input = await getInput("(p)roposals, (m)odify, (c)reate: ");
+    const input = await getInput("(p)roject, (m)odify, (c)reate: ");
     const commandExactMatch = Object.keys(hardcodeAliases).find(key => hardcodeAliases[key].includes(input));
     const command = commandExactMatch || await sequence([
         g35(
@@ -22,9 +27,9 @@ async function repl(): Promise<void> {
         
         You know the following commands:
 
-        ## proposals
-        > aliases: p, show proposals, proposal
-        - Shows all pending proposals in the system
+        ## project
+        > aliases: p, project, switch, change project, use project 
+        - switch the active project to <directory> 
 
         ## create file
         > aliases: c, new file, create, create a file
@@ -37,19 +42,21 @@ async function repl(): Promise<void> {
         Respond in JSON Format:
         \`\`\`json
         {
-            "command": 'proposals' | 'create file' | 'modify file',
+            "command": 'project' | 'proposals' | 'create file' | 'modify file',
         }
         \`\`\`
         `),
             input
         )
     ])
-        .then(asJSON<{ command: 'proposals' | 'create file' | 'modify file' }>)
+        .then(asJSON<{ command: 'project' | 'create file' | 'modify file' }>)
         .then(parsed => parsed.command);
 
     switch (command) {
-        case 'proposals':
-            console.log(await listProposals())
+        case 'project':
+            const homeDirectory = process.env.HOME || process.env.USERPROFILE || '/';
+            const relativeDirectory = await getInput(`switch to? ${homeDirectory}/`)
+            projectDirectory = path.join(homeDirectory, relativeDirectory)
             break;
         case 'create file':
             await promptCreateEmptyFile()
@@ -59,8 +66,8 @@ async function repl(): Promise<void> {
             break;
     }
 
-    return await repl(); // recursive repl
+    return await repl(projectDirectory); // recursive repl
 }
 
 
-repl();
+repl(process.argv[2] || process.cwd());

@@ -1,7 +1,7 @@
 import { chat } from '@/llm/chat.js';
 import { MaybePromise } from '@/utils.js';
 
-import ls from '@/fs/ls.js';
+import tree from '@/fs/tree.js';
 import pretty_print_directory from '@/fs/pretty_print_directory.js';
 import { subsequenceMatch } from '@/tools/search.js';
 import { extractPossibleCodeSnippet } from '@/tools/source-code-utils.js';
@@ -34,7 +34,7 @@ export async function getFilepath(_name: MaybePromise<string>) {
             .then(({ path }) => path)
     }
 
-    const dirs = (await ls('./src')).filter(file => !file.includes('.proposal'));
+    const dirs = (await tree('./src')).filter(file => !file.includes('.proposal'));
 
     // prefer an exact match
     const exactMatches = dirs.filter(file => file.includes(name))

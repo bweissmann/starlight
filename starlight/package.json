@@ -16,6 +16,7 @@
     "dedent": "^1.5.1",
     "diff": "^5.1.0",
     "dotenv": "^16.3.1",
+    "ignore": "^5.2.4",
     "js-tiktoken": "^1.0.7",
     "openai": "4.0.0",
     "sqlite": "^5.0.1",
