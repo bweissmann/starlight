@@ -16,8 +16,15 @@ function sort<T extends object | any[]>(x: T): T {
   return x;
 }
 
+export function isString(x: any): x is string {
+  return typeof x === 'string';
+}
+
 export function vomit(x: any) {
-  
+  if (isString(x)) {
+    return x
+  }
+
   return JSON.stringify(sort(x));
 }
 

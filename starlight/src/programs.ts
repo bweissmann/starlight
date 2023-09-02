@@ -1,6 +1,6 @@
 import { ChatContinuationResult, chat, sequence } from './llm/chat.js';
-import { g4, system, assistant, user } from './llm/utils.js';
-import { MaybePromise } from './utils.js';
+import { g4, system, assistant, user, g35 } from './llm/utils.js';
+import { MaybePromise, isString } from './utils.js';
 import propose, { askToAcceptProposal, proposalDiff } from './tools/propose.js';
 import read, { fileExists } from './fs/read.js';
 import { appendLineNumbers, extractPossibleCodeSnippet, insertSnippetIntoFile, stripLineNumbers } from './tools/source-code-utils.js';
@@ -26,7 +26,7 @@ async function _change(filepath: string, request: string, projectDirectory: stri
         g4(
             system(`You are an expert programmer. Make the requested changes to the file provided.
             ${await loadProjectStyleGuide(projectDirectory)}`),
-            
+
             user(`cat ${filepath}`),
             assistant(appendLineNumbers(fileContents)),
             user(request),
@@ -57,7 +57,7 @@ export async function rewriteChange(filename: string, originalChangeInstructions
     await getInput(chalk.bgRed.white.bold("** Using Legacy Rewrite System"))
     const fileContents = await read(filename)
 
-    const response = await chat([
+    const response = await chat(g35(
         system(`The user asked for a change to be made to the file ${filename}. The AI proposed a change and the user has feedback on that change. update the change as the user asks.`),
         system(`Here's the original file`),
         fileContents,
@@ -68,8 +68,7 @@ export async function rewriteChange(filename: string, originalChangeInstructions
         system(`Here's the user's feedback on the change`),
         feedback,
         system(`Respond with just a code snippet, not a diff`),
-    ])
-
+    ))
     await saveCodeSnippetAsProposal(filename, response, fileContents)
 
     await askToAcceptProposal(filename, {
@@ -81,8 +80,7 @@ export async function saveCodeSnippetAsProposal(filename: string, input: string 
     if (fileContents === undefined) {
         fileContents = await read(filename)
     }
-    const message = typeof input === "string" ? input : input.message
-    let codeSnippet = extractPossibleCodeSnippet(message)
+    let codeSnippet = extractPossibleCodeSnippet(input)
     if (codeSnippet.split("\n").every(line => line.match(/(\d+)\./) !== null)) {
         codeSnippet = stripLineNumbers(codeSnippet)
     }

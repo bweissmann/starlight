@@ -8,6 +8,7 @@ import { extractPossibleCodeSnippet } from '@/tools/source-code-utils.js';
 import asJSON from '@/llm/parser/json.js';
 import path from 'path';
 import dedent from 'dedent';
+import { g35 } from '@/llm/utils';
 
 /** Attempt to get a file by name in the src directory. */
 export async function getFilepath(_name: MaybePromise<string>) {
@@ -15,7 +16,7 @@ export async function getFilepath(_name: MaybePromise<string>) {
 
     async function askForPathAmongOptions(options: string[], name: string) {
         return chat(
-            [
+            g35(
                 pretty_print_directory(options),
                 dedent`
                 the user is asking for a filepath, but there isn't a single filename that matches the name they provided.
@@ -30,7 +31,7 @@ export async function getFilepath(_name: MaybePromise<string>) {
                 }
                 \`\`\`
                 `
-            ],
+            )
         )
             .then(extractPossibleCodeSnippet)
             .then(asJSON<{ path: string }>)

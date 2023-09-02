@@ -1,5 +1,5 @@
 import { chatYNQuestion } from "@/llm/classifier.js";
-import { ChatContinuationResult, chat, sequence, stringifyChatResult } from "@/llm/chat.js";
+import { ChatContinuationResult, sequence, stringifyChatResult } from "@/llm/chat.js";
 
 import asJSON from "@/llm/parser/json.js";
 import { g35, g4, system, user, assistant } from "@/llm/utils.js";

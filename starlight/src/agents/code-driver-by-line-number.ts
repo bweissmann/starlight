@@ -1,4 +1,4 @@
-import read, { readOrEmptyString } from "@/fs/read.js";
+import read from "@/fs/read.js";
 import { sequence } from "@/llm/chat.js";
 import asJSON from "@/llm/parser/json.js";
 import { asTripleHashtagList } from "@/llm/parser/triple-hashtag.js";

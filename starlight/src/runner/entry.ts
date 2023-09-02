@@ -6,6 +6,8 @@ import read, { fileExists } from '@/fs/read.js';
 import ignore from 'ignore';
 import tree from '@/fs/tree.js';
 import { logger } from '@/utils.js';
+import gatherContext from '@/agents/gather-context.js';
+import { defaultCx } from '@/project/context.js';
 
 /*
 
@@ -36,4 +38,8 @@ And if the code insertion is good then we should be able to test it even with ba
 ## testing / compilation errors
   > hotswap .proposal with .current and compile/run
 */
-await zshDriver(`zsh: permission denied: ./scripts/s -- can check the permissions?`)
+
+// const args = process.argv.slice(2).join(' ');
+// await gatherContext(defaultCx(), args.trim().length > 0 ? args : `Write search`)
+
+await zshDriver('how do i write a vscode extension?', '/Users/bweissmann/starlight')

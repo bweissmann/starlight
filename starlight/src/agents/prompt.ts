@@ -13,21 +13,6 @@ You feel free to suggest changes beyond the most narrow interpretation of the pr
 # Tools
 You have access to the following tools:
 
-## Copy / Paste <copy start-line-number> <copy end-line-number> <paste after-line-number>
-> copy and paste a code snippet within the same file.
-
-### Format
-\`\`\`json
-{
-    "command": "copy/paste"
-    "args": {
-        "copy start-line-number": number,
-        "copy end-line-number": number,
-        "paste after-line-number": number
-    }
-}
-\`\`\`
-
 ## Insert after <after-line-number> <CODE-CONTENT>
 > Inserts content as a new line after the specified line number
 

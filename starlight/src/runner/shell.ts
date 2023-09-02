@@ -8,18 +8,22 @@ import promptCreateEmptyFile from '@/tools/new-file.js';
 import chalk from 'chalk';
 import path from 'path';
 import process from 'process';
+import { zshDriver } from '@/agents/zsh-driver.js';
+
+type Command = 'project' | 'create file' | 'modify file' | 'zsh'
 
 async function repl(projectDirectory: string): Promise<void> {
     console.log(chalk.green(`Working project ${projectDirectory}`))
 
-    const hardcodeAliases: Record<string, string[]> = {
+    const hardcodeAliases: Record<Command, string[]> = {
         'project': ['project', 'p', 'switch', 'change project', 'use project'],
+        'modify file': ['modify file', 'm', 'modify', 'edit', 'edit file'],
         'create file': ['create file', 'c', 'new file', 'create', 'create a file'],
-        'modify file': ['modify file', 'm', 'modify', 'edit', 'edit file']
+        'zsh': ['zsh', 'z', 'shell', 'terminal', 'command'],
     };
 
-    const input = await getInput("(p)roject, (m)odify, (c)reate: ");
-    const commandExactMatch = Object.keys(hardcodeAliases).find(key => hardcodeAliases[key].includes(input));
+    const input = await getInput("(p)roject, (m)odify, (c)reate, (z)sh: ");
+    const commandExactMatch = (Object.keys(hardcodeAliases) as Command[]).find(key => hardcodeAliases[key].includes(input));
     const command = commandExactMatch || await sequence([
         g35(
             system(`
@@ -39,17 +43,21 @@ async function repl(projectDirectory: string): Promise<void> {
         > aliases: m, modify, edit, edit file
         - Modifies a file
 
+        ## zsh
+        > aliases: z, shell, terminal, command
+        - Start a new agent which can navigate and use the terminal
+
         Respond in JSON Format:
         \`\`\`json
         {
-            "command": 'project' | 'proposals' | 'create file' | 'modify file',
+            "command": 'project' | 'create file' | 'modify file' | 'zsh',
         }
         \`\`\`
         `),
             input
         )
     ])
-        .then(asJSON<{ command: 'project' | 'create file' | 'modify file' }>)
+        .then(asJSON<{ command: Command }>)
         .then(parsed => parsed.command);
 
     switch (command) {
@@ -63,6 +71,10 @@ async function repl(projectDirectory: string): Promise<void> {
             break;
         case 'modify file':
             await modifyFile()
+            break;
+        case 'zsh':
+            const task = await getInput('task: ')
+            await zshDriver(task, projectDirectory)
             break;
     }
 

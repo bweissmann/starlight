@@ -19,7 +19,7 @@ function getDB() {
     });
 }
 
-export async function getCachedResult(key: Object): Promise<string | null> {
+export async function dbGetCachedResult(key: Object): Promise<string | null> {
     const db = await getDB();
     try {
         const result = await db.get<{ id: string, key: string, result: string }>(
@@ -37,7 +37,7 @@ export async function getCachedResult(key: Object): Promise<string | null> {
 }
 
 
-export async function cacheResult(key: Object, result: string) {
+export async function writeToCache(key: Object, result: string) {
     const db = await getDB();
     try {
         await db.run(
@@ -46,7 +46,7 @@ export async function cacheResult(key: Object, result: string) {
             result
         );
     } catch (error) {
-        console.error('Error when trying to get cached result: ', error);
+        console.error('Error when trying to write to cache: ', error);
     } finally {
         await db.close();
     }

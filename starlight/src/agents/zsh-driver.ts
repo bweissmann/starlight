@@ -29,7 +29,6 @@ export async function zshDriver(task: string, projectDirectory?: string) {
     ])
 
     try {
-
         let previousresponse = initialresponse;
         for (let i = 0; i < 16; i++) {
             const previousHistoryWithoutReminder = [...previousresponse.fullHistory.slice(0, -2), ...previousresponse.fullHistory.slice(-1)]
@@ -94,7 +93,14 @@ async function proposeCommands(commands: string[]) {
             const output = await dangerouslyExecuteTerminalCommands(filepath)
             return output.trim().length > 0 ? output : 'command finished with no stdout'
         },
-        'n': async () => 'the user decided not to run the commands. you can re-ask the user if they want to run them or if they want to modify them'
+        'n': async () => {
+            const feedback = await getInput("Why not? (or enter) ")
+            if (feedback.trim().length === 0) {
+                return 'the user decided not to run the commands. you can re-ask the user if they want to run them or if they want to modify them'
+            } else {
+                return `the user decided not to run the commands. They said: ${feedback}`
+            }
+        }
     })
 }
 
