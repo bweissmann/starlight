@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "npx ts-node entry.ts",
     "start": "node build/entry.js",
-    "build": "npx tspc",
+    "build": "tsc --noEmit && babel src -d build --extensions \".ts\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -21,17 +21,19 @@
     "openai": "4.0.0",
     "sqlite": "^5.0.1",
     "sqlite3": "^5.1.6",
-    "tree-sitter": "^0.20.5",
-    "tree-sitter-typescript": "^0.20.1",
     "typescript": "^5.1.6",
     "xml2js": "^0.6.2"
   },
   "type": "module",
   "devDependencies": {
+    "@babel/cli": "^7.22.15",
+    "@babel/core": "^7.22.15",
+    "@babel/preset-env": "^7.22.15",
+    "@babel/preset-typescript": "^7.22.15",
     "@types/diff": "^5.0.3",
     "@types/node": "^20.4.4",
     "@types/xml2js": "^0.4.11",
-    "ts-patch": "^3.0.2",
+    "babel-plugin-module-resolver": "^5.0.0",
     "typescript-transform-paths": "^3.4.6"
   }
 }

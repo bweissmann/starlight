@@ -1,12 +1,12 @@
-import { ChatContinuationResult, chat, sequence } from './llm/chat.js';
-import { g4, system, assistant, user, g35 } from './llm/utils.js';
-import { MaybePromise, isString } from './utils.js';
-import propose, { askToAcceptProposal, proposalDiff } from './tools/propose.js';
-import read, { fileExists } from './fs/read.js';
-import { appendLineNumbers, extractPossibleCodeSnippet, insertSnippetIntoFile, stripLineNumbers } from './tools/source-code-utils.js';
-import getInput from './tools/user_input.js';
-import { getFilepath } from './fs/get-filepath.js';
-import { loadProjectStyleGuide } from './project/loaders.js';
+import { ChatContinuationResult, chat, sequence } from './llm/chat';
+import { g4, system, assistant, user, g35 } from './llm/utils';
+import { MaybePromise, isString } from './utils';
+import propose, { askToAcceptProposal, proposalDiff } from './tools/propose';
+import read, { fileExists } from './fs/read';
+import { appendLineNumbers, extractPossibleCodeSnippet, insertSnippetIntoFile, stripLineNumbers } from './tools/source-code-utils';
+import getInput from './tools/user_input';
+import { getFilepath } from './fs/get-filepath';
+import { loadProjectStyleGuide } from './project/loaders';
 import chalk from 'chalk';
 
 export async function change(filenameOrFilepath: MaybePromise<string>, request: string, projectDirectory: string) {

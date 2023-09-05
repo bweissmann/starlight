@@ -1,3 +1,4 @@
 #!/bin/bash
 
-npx tspc; node build/runner/modify-file.js
+pnpm run build;
+node build/runner/modify-file.js;

@@ -1,7 +1,6 @@
 import sqlite3 from 'sqlite3'
 import { open } from 'sqlite'
-import { vomit } from './utils.js';
-
+import { vomit } from './utils';
 const schema = `
     CREATE TABLE IF NOT EXISTS llm_cache (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -1,9 +1,9 @@
-import read from "@/fs/read.js";
-import { chat } from "@/llm/chat.js";
-import { g4_t02, system_dedent, user, user_dedent } from "@/llm/utils.js";
-import { Rx, Tx } from "@/project/context.js";
-import { appendLineNumbers, extractCodeSnippets } from "@/tools/source-code-utils.js";
-import { logger } from "@/utils.js";
+import read from "@/fs/read";
+import { chat } from "@/llm/chat";
+import { g4_t02, system_dedent, user, user_dedent } from "@/llm/utils";
+import { Rx, Tx } from "@/project/context";
+import { appendLineNumbers, extractCodeSnippets } from "@/tools/source-code-utils";
+import { logger } from "@/utils";
 import chalk from "chalk";
 
 /* 

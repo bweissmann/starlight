@@ -1,9 +1,9 @@
-import { sequence } from "@/llm/chat.js";
-import asJSON from "@/llm/parser/json.js";
-import { g4, system } from "@/llm/utils.js";
-import { Cx } from "@/project/context.js";
-import { extractCodeSnippets } from "@/tools/source-code-utils.js";
-import { logger } from "@/utils.js";
+import { sequence } from "@/llm/chat";
+import asJSON from "@/llm/parser/json";
+import { g4, system } from "@/llm/utils";
+import { Cx } from "@/project/context";
+import { extractCodeSnippets } from "@/tools/source-code-utils";
+import { logger } from "@/utils";
 import dedent from "dedent";
 
 type SearchAction = {

@@ -1,9 +1,8 @@
 import OpenAI from 'openai';
 import chalk from 'chalk';
-import { isString, vomit } from '../utils.js';
-import { ChatSpec, Message, MessageOrStr, ModelName, assistant, estimatePricing, logMessages, readAndLogStream, toMessageArray } from './utils.js';
-import { writeToCache as writeToCache, dbGetCachedResult } from '../db.js';
-
+import { isString, vomit } from '../utils';
+import { ChatSpec, Message, MessageOrStr, ModelName, assistant, estimatePricing, logMessages, readAndLogStream, toMessageArray } from './utils';
+import { writeToCache as writeToCache, dbGetCachedResult } from '../db';
 const __openai = new OpenAI(); // never use this directly, always use getOpenAI() so we can keep track of all the raw api entry points 
 export function getOpenAI() {
     return __openai

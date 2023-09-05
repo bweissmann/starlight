@@ -1,15 +1,13 @@
-import { chat } from '@/llm/chat.js';
-import { MaybePromise } from '@/utils.js';
-
-import tree from '@/fs/tree.js';
-import pretty_print_directory from '@/fs/pretty_print_directory.js';
-import { subsequenceMatch } from '@/tools/search.js';
-import { extractPossibleCodeSnippet } from '@/tools/source-code-utils.js';
-import asJSON from '@/llm/parser/json.js';
+import { chat } from '@/llm/chat';
+import { MaybePromise } from '@/utils';
+import tree from '@/fs/tree';
+import pretty_print_directory from '@/fs/pretty_print_directory';
+import { subsequenceMatch } from '@/tools/search';
+import { extractPossibleCodeSnippet } from '@/tools/source-code-utils';
+import asJSON from '@/llm/parser/json';
 import path from 'path';
 import dedent from 'dedent';
-import { g35 } from '@/llm/utils.js';
-
+import { g35 } from '@/llm/utils';
 /** Attempt to get a file by name in the src directory. */
 export async function getFilepath(_name: MaybePromise<string>) {
     const name = await _name

@@ -1,9 +1,8 @@
 import { promises as fs } from 'fs';
 import ignore from 'ignore';
-import pretty_print_directory from './pretty_print_directory.js';
+import pretty_print_directory from './pretty_print_directory';
 import path from 'path';
-import { fileExists, readOrEmptyString } from './read.js';
-
+import { fileExists, readOrEmptyString } from './read';
 export default async function tree(rootDirectory: string, filterByGitignore: boolean = true): Promise<string[]> {
     rootDirectory = path.resolve(rootDirectory)
 

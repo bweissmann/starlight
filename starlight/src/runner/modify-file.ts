@@ -1,4 +1,3 @@
 import 'dotenv/config';
-import { modifyFile } from './utils.js';
-
+import { modifyFile } from './utils';
 modifyFile()

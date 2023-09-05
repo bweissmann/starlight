@@ -1,5 +1,4 @@
-import { Cx } from "@/project/context.js";
-
+import { Cx } from "@/project/context";
 export function subsequenceMatch(query: string, candidate: string): boolean {
     let j = 0; // Index for query
     for (let i = 0; i < candidate.length && j < query.length; i++) {
@@ -10,9 +9,8 @@ export function subsequenceMatch(query: string, candidate: string): boolean {
     // If all characters of query were found in the candidate in order
     return (j == query.length);
 }
-import read from "@/fs/read.js";
-import tree from "@/fs/tree.js";
-
+import read from "@/fs/read";
+import tree from "@/fs/tree";
 /* global search, like in code IDEs. returns matches with metadata of the file, line, column of the match*/
 export async function globalSearch(cx: Cx, query: string) {
     /** WARNING: gpt-4 wrote this and its super broken. dont use */

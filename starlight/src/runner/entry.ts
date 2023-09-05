@@ -1,14 +1,14 @@
 import 'dotenv/config';
 import dedent from 'dedent';
-import { executeCommand } from '@/agents/zsh-driver.js';
-import { chat } from '@/llm/chat.js';
-import { g4_t04, system, user } from '@/llm/utils.js';
-import { loadProjectContext } from '@/project/loaders.js';
-import { extractPossibleCodeSnippet } from '@/tools/source-code-utils.js';
-import asJSON from '@/llm/parser/json.js';
-import { codePlanner } from '@/agents/code-planner.js';
-import { Rx, defaultRx } from '@/project/context.js';
-import { getFilepath } from '@/fs/get-filepath.js';
+import { executeCommand } from '@/agents/zsh-driver';
+import { chat } from '@/llm/chat';
+import { g4_t04, system, user } from '@/llm/utils';
+import { loadProjectContext } from '@/project/loaders';
+import { extractPossibleCodeSnippet } from '@/tools/source-code-utils';
+import asJSON from '@/llm/parser/json';
+import { codePlanner } from '@/agents/code-planner';
+import { Rx, defaultRx } from '@/project/context';
+import { getFilepath } from '@/fs/get-filepath';
 
 /*
 
@@ -99,4 +99,4 @@ async function take(action: CodeEditAction) {
   await codePlanner(defaultRx(), action.file, action.instructions)
 }
 
-take({ file: await getFilepath('seach'), instructions: 'move all the imports to the top of the file' })
+take({ file: await getFilepath('search'), instructions: 'move all the imports to the top of the file' })

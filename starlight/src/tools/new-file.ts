@@ -1,7 +1,7 @@
-import getInput from '@/tools/user_input.js';
-import write from '@/fs/write.js';
+import getInput from '@/tools/user_input';
+import write from '@/fs/write';
 import fs from 'fs/promises';
-import { fileExists } from '@/fs/read.js';
+import { fileExists } from '@/fs/read';
 import path from 'path';
 
 export default async function promptCreateEmptyFile() {

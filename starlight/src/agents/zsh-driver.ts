@@ -1,17 +1,17 @@
-import { sequence } from '@/llm/chat.js';
-import { g4 } from '@/llm/utils.js';
-import read, { fileExists } from '@/fs/read.js';
-import { treePrettyPrint } from '@/fs/tree.js';
-import { extractCodeSnippets } from '@/tools/source-code-utils.js';
-import getInput, { askMultiChoice } from '@/tools/user_input.js';
-import asJSON from '@/llm/parser/json.js';
+import { sequence } from '@/llm/chat';
+import { g4 } from '@/llm/utils';
+import read, { fileExists } from '@/fs/read';
+import { treePrettyPrint } from '@/fs/tree';
+import { extractCodeSnippets } from '@/tools/source-code-utils';
+import getInput, { askMultiChoice } from '@/tools/user_input';
+import asJSON from '@/llm/parser/json';
 import chalk from 'chalk';
-import { zshDriver as prompts } from './prompt.js';
-import propose, { cleanUpProposalDirectory, proposalFilepath } from '@/tools/propose.js';
+import { zshDriver as prompts } from './prompt';
+import propose, { cleanUpProposalDirectory, proposalFilepath } from '@/tools/propose';
 import { spawn } from 'child_process';
 import dedent from 'dedent';
 import fs from 'fs/promises';
-import { filepath_within_subdirectory, write_to_subdirectory } from '@/fs/subdirectory.js';
+import { filepath_within_subdirectory, write_to_subdirectory } from '@/fs/subdirectory';
 import path from 'path';
 
 type CommandInput = { command: 'tree' | 'cat' | 'modify' | 'quit' | 'propose', args: string[] }

@@ -1,5 +1,4 @@
-import { readOrEmptyString } from "@/fs/read.js";
-
+import { readOrEmptyString } from "@/fs/read";
 export async function loadProjectContext(projectDirectory?: string) {
     return loadProjectFile('context.md', projectDirectory);
 }

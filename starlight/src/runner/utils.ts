@@ -1,12 +1,11 @@
-import getInput, { askMultiChoice } from '@/tools/user_input.js';
-import { rewriteChange } from '@/programs.js';
-import { fileExists } from '@/fs/read.js';
-import { askToAcceptProposal, proposalFilepath } from '@/tools/propose.js';
+import getInput, { askMultiChoice } from '@/tools/user_input';
+import { rewriteChange } from '@/programs';
+import { fileExists } from '@/fs/read';
+import { askToAcceptProposal, proposalFilepath } from '@/tools/propose';
 import chalk from 'chalk';
-import { getFilepath } from '@/fs/get-filepath.js';
-import { codeDriver } from '@/agents/code-driver-by-line-number.js';
-import { filenameOf } from '@/fs/utils.js';
-
+import { getFilepath } from '@/fs/get-filepath';
+import { codeDriver } from '@/agents/code-driver-by-line-number';
+import { filenameOf } from '@/fs/utils';
 export async function modifyFile(filename?: string) {
     const filepath = filename ?? await getFilepath(getInput("What file do you want to change? "));
     console.log("Using", chalk.green(filepath));

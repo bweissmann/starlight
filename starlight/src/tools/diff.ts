@@ -1,5 +1,5 @@
 import { createPatch } from 'diff';
-import read, { readOrEmptyString } from '../fs/read.js';
+import read, { readOrEmptyString } from '../fs/read';
 import chalk from 'chalk';
 
 export async function diff(filename1: string, filename2: string): Promise<string> {

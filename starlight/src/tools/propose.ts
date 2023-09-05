@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
-import { filepath_within_subdirectory, write_to_subdirectory } from '../fs/subdirectory.js';
-import { consoleLogDiff, diff } from './diff.js';
-import { askMultiChoice } from './user_input.js';
+import { filepath_within_subdirectory, write_to_subdirectory } from '../fs/subdirectory';
+import { consoleLogDiff, diff } from './diff';
+import { askMultiChoice } from './user_input';
 import path from 'path';
 
 /**

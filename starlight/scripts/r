@@ -1,3 +1,4 @@
 #!/bin/bash
 
-npx tspc; node build/runner/entry.js "$@"
+pnpm run build;
+node build/runner/entry.js "$@";

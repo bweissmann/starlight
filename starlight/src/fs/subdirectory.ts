@@ -1,5 +1,5 @@
-import write from './write.js';
-import { directoryOf, filenameOf } from './utils.js';
+import write from './write';
+import { directoryOf, filenameOf } from './utils';
 import path from 'path';
 
 /**

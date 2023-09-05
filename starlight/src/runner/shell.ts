@@ -1,15 +1,14 @@
 import 'dotenv/config';
-import { sequence } from "@/llm/chat.js";
-import { g35, system } from "@/llm/utils.js";
-import getInput from "@/tools/user_input.js";
-import asJSON from '@/llm/parser/json.js';
-import { modifyFile } from './utils.js';
-import promptCreateEmptyFile from '@/tools/new-file.js';
+import { sequence } from "@/llm/chat";
+import { g35, system } from "@/llm/utils";
+import getInput from "@/tools/user_input";
+import asJSON from '@/llm/parser/json';
+import { modifyFile } from './utils';
+import promptCreateEmptyFile from '@/tools/new-file';
 import chalk from 'chalk';
 import path from 'path';
 import process from 'process';
-import { zshDriver } from '@/agents/zsh-driver.js';
-
+import { zshDriver } from '@/agents/zsh-driver';
 type Command = 'project' | 'create file' | 'modify file' | 'zsh'
 
 async function repl(projectDirectory: string): Promise<void> {

@@ -1,5 +1,4 @@
-import { ChatContinuationResult, stringifyChatResult } from "../chat.js";
-
+import { ChatContinuationResult, stringifyChatResult } from "../chat";
 /**
  * We can prompt the LLM to output lists with each entry of the list prefixed by ### [identifier]
  * The entry in the list starts after the newline following the identifier and lasts until the next ### or the end of the string.

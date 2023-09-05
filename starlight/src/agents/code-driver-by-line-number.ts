@@ -1,13 +1,13 @@
-import read from "@/fs/read.js";
-import { sequence } from "@/llm/chat.js";
-import asJSON from "@/llm/parser/json.js";
-import { asTripleHashtagList } from "@/llm/parser/triple-hashtag.js";
-import { g4, assistant, system, user } from "@/llm/utils.js";
-import { rewriteChange } from "@/programs.js";
-import { appendLineNumbers, extractCodeSnippets, extractPossibleCodeSnippet } from "@/tools/source-code-utils.js";
-import { consoleLogDiff } from "@/tools/diff.js";
-import propose, { askToAcceptProposal, proposalDiff, proposalFilepath } from "@/tools/propose.js";
-import getInput from "@/tools/user_input.js";
+import read from "@/fs/read";
+import { sequence } from "@/llm/chat";
+import asJSON from "@/llm/parser/json";
+import { asTripleHashtagList } from "@/llm/parser/triple-hashtag";
+import { g4, assistant, system, user } from "@/llm/utils";
+import { rewriteChange } from "@/programs";
+import { appendLineNumbers, extractCodeSnippets, extractPossibleCodeSnippet } from "@/tools/source-code-utils";
+import { consoleLogDiff } from "@/tools/diff";
+import propose, { askToAcceptProposal, proposalDiff, proposalFilepath } from "@/tools/propose";
+import getInput from "@/tools/user_input";
 import chalk from "chalk";
 import { codeDriver as prompts } from './prompt.js'
 import dedent from "dedent";

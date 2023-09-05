@@ -1,6 +1,5 @@
 import { promises as fs } from 'fs';
-import { directoryOf, filenameOf } from './utils.js';
-
+import { directoryOf, filenameOf } from './utils';
 export default async function write(where: { directory: string, filename: string } | { filepath: string }, contents: string): Promise<void> {
   const directory = 'directory' in where ? where.directory : directoryOf(where.filepath);
   const filename = 'filename' in where ? where.filename : filenameOf(where.filepath)
