@@ -1,13 +1,14 @@
 import 'dotenv/config';
-import { zshDriver } from '@/agents/zsh-driver.js';
-import { codeDriver } from '@/agents/code-driver-by-line-number.js';
-import path from 'path';
-import read, { fileExists } from '@/fs/read.js';
-import ignore from 'ignore';
-import tree from '@/fs/tree.js';
-import { logger } from '@/utils.js';
-import gatherContext from '@/agents/gather-context.js';
-import { defaultCx } from '@/project/context.js';
+import dedent from 'dedent';
+import { executeCommand } from '@/agents/zsh-driver.js';
+import { chat } from '@/llm/chat.js';
+import { g4_t04, system, user } from '@/llm/utils.js';
+import { loadProjectContext } from '@/project/loaders.js';
+import { extractPossibleCodeSnippet } from '@/tools/source-code-utils.js';
+import asJSON from '@/llm/parser/json.js';
+import { codePlanner } from '@/agents/code-planner.js';
+import { Rx, defaultRx } from '@/project/context.js';
+import { getFilepath } from '@/fs/get-filepath.js';
 
 /*
 
@@ -42,4 +43,60 @@ And if the code insertion is good then we should be able to test it even with ba
 // const args = process.argv.slice(2).join(' ');
 // await gatherContext(defaultCx(), args.trim().length > 0 ? args : `Write search`)
 
-await zshDriver('how do i write a vscode extension?', '/Users/bweissmann/starlight')
+type CodeEditAction = { file: string, instructions: string }
+
+// const error = await run('scripts/s')
+// const action = await chat(
+//   g4_t04(
+//     system(
+//       dedent`
+//     # Task
+//     Fix the following error message in the codebase.
+
+//     Write your response in the format:
+//     ## Explanation
+//     {10-20 words on how to fix the error}
+
+//     ## Action
+//     {an action, in its desired format}
+
+
+//     # Context
+//     ${await loadProjectContext('.')}
+
+//     # Possible Actions
+//     - * launch editor *
+//     Launch a code editing agent to modify a source file.
+
+//     Action format:
+//     \`\`\`json
+//     {
+//       file: string, // the file to open
+//       instructions: string // the instructions to the code editing agent
+//     }
+
+//     `),
+//     user`
+//     # Error
+//     ${error}
+//     `
+//   )
+// )
+//   .then(extractPossibleCodeSnippet)
+//   .then(asJSON<CodeEditAction>)
+
+// await take(action)
+
+// async function run(command: string) {
+//   try {
+//     return await executeCommand(command);
+//   } catch (e: any) {
+//     return e.toString()
+//   }
+// }
+
+async function take(action: CodeEditAction) {
+  await codePlanner(defaultRx(), action.file, action.instructions)
+}
+
+take({ file: await getFilepath('seach'), instructions: 'move all the imports to the top of the file' })
