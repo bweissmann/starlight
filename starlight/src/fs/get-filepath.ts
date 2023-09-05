@@ -8,7 +8,7 @@ import { extractPossibleCodeSnippet } from '@/tools/source-code-utils.js';
 import asJSON from '@/llm/parser/json.js';
 import path from 'path';
 import dedent from 'dedent';
-import { g35 } from '@/llm/utils';
+import { g35 } from '@/llm/utils.js';
 
 /** Attempt to get a file by name in the src directory. */
 export async function getFilepath(_name: MaybePromise<string>) {

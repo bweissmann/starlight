@@ -48,21 +48,6 @@ You have access to the following tools:
 <CODE-CONTENT>
 \`\`\`
 
-
-## Delete <start-line-number> <end-line-number>
-> Deletes a chunk from the file
-
-### Format
-\`\`\`json
-{
-    "command": "delete"
-    "args": {
-        "start-line-number": number,
-        "end-line-number": number,
-    }
-}
-\`\`\`
-
 ---
 
 # Format
@@ -143,7 +128,7 @@ Write the one step you need to do next.
 Your output format should be:
 
 [start of response]
-<if you are doing something *extemely* unconventional, write less than 15 words about why. Preferably say nothing>
+<write 5-15 words about why you're doing this step>
 
 \`\`\`json
 {

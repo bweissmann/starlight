@@ -5,3 +5,5 @@
 ```
 Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/Users/bweissmann/starlight/starlight/build/agents/coding-driver' imported from /Users/bweissmann/starlight/starlight/build/runner/utils.js
 ```
+
+- Code written in typescript in /src and compuiled to javascript in /build

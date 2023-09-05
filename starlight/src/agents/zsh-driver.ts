@@ -130,32 +130,33 @@ async function dangerouslyExecuteTerminalCommands(filepath: string) {
 
     return output;
 }
-
-async function executeCommand(command: string): Promise<string> {
+export async function executeCommand(command: string): Promise<string> {
     return new Promise((resolve, reject) => {
         const [cmd, ...args] = command.split(' ');
 
         const child = spawn(cmd, args);
 
-        let output = '';
+        let stdout = '';
+        let stderr = '';
 
         // Stream stdout to console and accumulate
         child.stdout.on('data', (data) => {
             console.log(chalk.blue(data.toString()));
-            output += data.toString();
+            stdout += data.toString();
         });
 
-        // Stream stderr to console
+        // Stream stderr to console and accumulate
         child.stderr.on('data', (data) => {
             console.log(chalk.red(data.toString()));
+            stderr += data.toString();
         });
 
         // Resolve the promise with the accumulated output when the process finishes
         child.on('close', (code) => {
             if (code !== 0) {
-                reject(new Error(`Command exited with code ${code}`));
+                reject(`Command exited with code ${code}. Error: ${stderr}`);
             } else {
-                resolve(output);
+                resolve(stdout);
             }
         });
 

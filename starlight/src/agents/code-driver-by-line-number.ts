@@ -36,15 +36,7 @@ type ReplaceCommand = {
     }
 }
 
-type DeleteCommand = {
-    "command": "delete"
-    "args": {
-        "start-line-number": number,
-        "end-line-number": number,
-    }
-}
-
-type Command = CopyPasteCommand | InsertAfterCommand | ReplaceCommand | DeleteCommand;
+type Command = CopyPasteCommand | InsertAfterCommand | ReplaceCommand;
 type Step = InsertStep | ReplaceStep
 
 
@@ -88,7 +80,6 @@ export async function codeDriver(filename: string, task: string, projectDirector
                 const originalFileContents = await read(filename)
                 switch (command.command) {
                     case 'copy/paste':
-                    case 'delete':
                         throw 'unimplemented'
                     case 'insert after':
                         return {

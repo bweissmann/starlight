@@ -3,6 +3,7 @@ import OpenAI from "openai"
 import { Stream } from "openai/streaming"
 import { isString, toArray } from "../utils.js"
 import { encodingForModel } from 'js-tiktoken'
+import dedent from "dedent"
 export type ChatSpec = { model: ModelName, messages: MessageOrStr[], temperature: number }
 export type ModelName = 'gpt-3.5-turbo' | 'gpt-4'
 export type Message = OpenAI.Chat.Completions.ChatCompletionMessage
@@ -20,6 +21,13 @@ export function g4_t02(...messages: MessageOrStr[]): ChatSpec;
 export function g4_t02(...messages: MessageOrStr[] | [MessageOrStr[]]): ChatSpec {
     const flattenedMessages = (Array.isArray(messages[0]) ? messages[0] : messages) as MessageOrStr[]
     return { model: 'gpt-4', messages: toMessageArray(flattenedMessages), temperature: 0.2 }
+}
+
+export function g4_t04(messages: MessageOrStr[]): ChatSpec;
+export function g4_t04(...messages: MessageOrStr[]): ChatSpec;
+export function g4_t04(...messages: MessageOrStr[] | [MessageOrStr[]]): ChatSpec {
+    const flattenedMessages = (Array.isArray(messages[0]) ? messages[0] : messages) as MessageOrStr[]
+    return { model: 'gpt-4', messages: toMessageArray(flattenedMessages), temperature: 0.4 }
 }
 
 export function g35(messages: MessageOrStr[]): ChatSpec;
@@ -126,5 +134,27 @@ export function assistant(content: string): Message;
 export function assistant(strings: TemplateStringsArray, ...values: any[]): Message;
 export function assistant(strings: any, ...values: any[]): Message {
     const content = assembleContent(strings, ...values);
+    return { role: 'assistant', content };
+}
+
+
+export function system_dedent(content: string): Message;
+export function system_dedent(strings: TemplateStringsArray, ...values: any[]): Message;
+export function system_dedent(strings: any, ...values: any[]): Message {
+    const content = dedent(assembleContent(strings, ...values));
+    return { role: 'system', content };
+}
+
+export function user_dedent(content: string): Message;
+export function user_dedent(strings: TemplateStringsArray, ...values: any[]): Message;
+export function user_dedent(strings: any, ...values: any[]): Message {
+    const content = dedent(assembleContent(strings, ...values));
+    return { role: 'user', content };
+}
+
+export function assistant_dedent(content: string): Message;
+export function assistant_dedent(strings: TemplateStringsArray, ...values: any[]): Message;
+export function assistant_dedent(strings: any, ...values: any[]): Message {
+    const content = dedent(assembleContent(strings, ...values));
     return { role: 'assistant', content };
 }

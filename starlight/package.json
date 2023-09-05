@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "npx ts-node entry.ts",
     "start": "node build/entry.js",
-    "build": "tsc",
+    "build": "npx tspc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
