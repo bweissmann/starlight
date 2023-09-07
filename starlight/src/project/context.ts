@@ -1,53 +1,74 @@
 /* The working context for an agent */
 export type Cx = {
-    name: string,
-    projectDirectory: string,
-}
+  name: string;
+  projectDirectory: string;
+};
 
 /* The root context */
 export class Rx {
-    cx: Cx
-    tag: 'rx'
+  cx: Cx;
+  children: Tx[];
+  tag: "rx";
 
-    constructor(cx: Cx) {
-        this.cx = cx;
-        this.tag = 'rx'
-    }
+  constructor(cx: Cx) {
+    this.cx = cx;
+    this.tag = "rx";
+    this.children = [];
+  }
 
-    // Spawn a task from the root context
-    spawn(): Tx {
-        return {
-            parent: this,
-            peers: []
-        }
-    }
+  spawn() {
+    return spawnChild(this);
+  }
+}
+
+function spawnChild(parent: Tx | Rx): Tx {
+  const child = new Tx(parent);
+  parent.children.push(child);
+  return child;
+}
+
+export function indexInParent(child: Tx): number {
+  return child.parent.children.indexOf(child);
 }
 
 function isRx(obj: Object): obj is Rx {
-    return 'tag' in obj && obj.tag === 'rx'
+  return "tag" in obj && obj.tag === "rx";
 }
 
 /* The task context */
-export type Tx = {
-    parent: Tx | Rx,
-    peers: Tx[]
-}
+export class Tx {
+  parent: Tx | Rx;
+  children: Tx[];
 
-export function cxOf(x: Tx | Rx): Cx {
-    if (isRx(x)) {
-        return x.cx
+  constructor(parent: Tx | Rx) {
+    this.parent = parent;
+    this.children = [];
+  }
+
+  get cx(): Cx {
+    if (isRx(this)) {
+      return this.cx;
     } else {
-        return cxOf(x.parent)
+      return this.parent.cx;
     }
+  }
+
+  get projectDirectory() {
+    return this.cx.projectDirectory;
+  }
+
+  spawn() {
+    return spawnChild(this);
+  }
 }
 
-export function defaultRx() {
-    return new Rx(defaultCx());
+export function defaultTx() {
+  return new Rx(defaultCx()).spawn();
 }
 
 export function defaultCx(): Cx {
-    return {
-        name: 'default',
-        projectDirectory: '.'
-    }
+  return {
+    name: "default",
+    projectDirectory: ".",
+  };
 }

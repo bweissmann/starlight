@@ -1,4 +1,0 @@
-#!/bin/bash
-
-pnpm run build;
-node build/runner/modify-file.js;

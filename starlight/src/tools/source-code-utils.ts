@@ -2,6 +2,7 @@ import { chatYNQuestion } from "@/llm/classifier";
 import { ChatContinuationResult, sequence, stringifyChatResult } from "@/llm/chat";
 import asJSON from "@/llm/parser/json";
 import { g35, g4, system, user, assistant } from "@/llm/utils";
+import prettier from "prettier";
 export function extractCodeSnippets(input: string | ChatContinuationResult): string[] {
     return _extractCodeSnippets(stringifyChatResult(input))
 }
@@ -106,4 +107,22 @@ export function stripLineNumbers(input: string): string {
         .split('\n')
         .map(line => line.replace(/^\d+.\s?/, ''))
         .join('\n');
+}
+
+export function takeUntil(fileContents: string, untilLineNo: number, n: number): string {
+    const lines = fileContents.split('\n');
+    const startLineNo = Math.max(0, untilLineNo - n); // clamp startLineNo to be at least 0
+    return lines.slice(startLineNo, untilLineNo).join('\n');
+}
+
+export function takeAfter(fileContents: string, afterLineNo: number, n: number): string {
+    const lines = fileContents.split('\n');
+    const startLineNo = Math.min(lines.length, afterLineNo); // clamp startLineNo to be at most lines.length
+    const endLineNo = Math.min(lines.length, startLineNo + n); // clamp endLineNo to be at most lines.length
+    return lines.slice(startLineNo, endLineNo).join('\n');
+}
+
+
+export function reformat(sourceCode: string): string {
+    return prettier.format(sourceCode, { parser: "typescript" });
 }

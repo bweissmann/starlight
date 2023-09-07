@@ -3,6 +3,8 @@ import { filepath_within_subdirectory, write_to_subdirectory } from '../fs/subdi
 import { consoleLogDiff, diff } from './diff';
 import { askMultiChoice } from './user_input';
 import path from 'path';
+import { Tx, indexInParent } from '@/project/context';
+import write from '@/fs/write';
 
 /**
  * Creates a new file at: {directory}/.proposal/{filename} and writes the contents to that file.
@@ -12,6 +14,15 @@ import path from 'path';
  */
 export default async function propose(filepath: string, contents: string): Promise<void> {
   await write_to_subdirectory(filepath, ".proposal", contents)
+}
+
+export async function proposeStep(tx: Tx, filepath: string, contents: string): Promise<void> {
+  await write({ filepath: proposalStepFilepath(tx, filepath) }, contents)
+}
+
+export async function printProposalStep(tx: Tx, filepath: string) {
+  const proposalDiff = await diff(filepath, proposalStepFilepath(tx, filepath))
+  consoleLogDiff(proposalDiff);
 }
 
 async function acceptProposal(filepath: string): Promise<void> {
@@ -43,6 +54,10 @@ export async function cleanUpProposalDirectory(filepath: string) {
 
 export async function proposalDiff(filepath: string) {
   return await diff(filepath, proposalFilepath(filepath))
+}
+
+export function proposalStepFilepath(tx: Tx, filepath: string) {
+  return filepath_within_subdirectory(filepath, path.join(".proposal", tx.cx.name, `intermediate${indexInParent(tx)}`))
 }
 
 export function proposalFilepath(filepath: string) {

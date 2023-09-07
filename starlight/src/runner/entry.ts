@@ -1,14 +1,17 @@
-import 'dotenv/config';
-import dedent from 'dedent';
-import { executeCommand } from '@/agents/zsh-driver';
-import { chat } from '@/llm/chat';
-import { g4_t04, system, user } from '@/llm/utils';
-import { loadProjectContext } from '@/project/loaders';
-import { extractPossibleCodeSnippet } from '@/tools/source-code-utils';
-import asJSON from '@/llm/parser/json';
-import { codePlanner } from '@/agents/code-planner';
-import { Rx, defaultRx } from '@/project/context';
-import { getFilepath } from '@/fs/get-filepath';
+import "dotenv/config";
+import dedent from "dedent";
+import { executeCommand, zshDriver } from "@/agents/zsh-driver";
+import { chat } from "@/llm/chat";
+import { g4_t04, system, system_dedent, user } from "@/llm/utils";
+import { loadProjectContext } from "@/project/loaders";
+import {
+  extractCodeSnippets,
+  extractPossibleCodeSnippet,
+} from "@/tools/source-code-utils";
+import asJSON from "@/llm/parser/json";
+import { codePlanner } from "@/agents/code-planner";
+import { getFilepath } from "@/fs/get-filepath";
+import { defaultTx } from "@/project/context";
 
 /*
 
@@ -43,60 +46,115 @@ And if the code insertion is good then we should be able to test it even with ba
 // const args = process.argv.slice(2).join(' ');
 // await gatherContext(defaultCx(), args.trim().length > 0 ? args : `Write search`)
 
-type CodeEditAction = { file: string, instructions: string }
+const errorBlob = await run("pnpm run tsc");
+const errors = await chat(
+  g4_t04(
+    system`
+    # Introduction
+    Here is the output from running a nodejs project.
+    Your task is to separate out each error in the stdout.
+    Respond by repeating each error inside its own three backticks.
 
-// const error = await run('scripts/s')
-// const action = await chat(
-//   g4_t04(
-//     system(
-//       dedent`
-//     # Task
-//     Fix the following error message in the codebase.
+    # Examples
 
-//     Write your response in the format:
-//     ## Explanation
-//     {10-20 words on how to fix the error}
+    ## Scenario 1: One Error only
 
-//     ## Action
-//     {an action, in its desired format}
+    [input]
+    Command exited with code 1.
+    Output: 
+    Error: 
+      src/tools/source-code-utils.ts(127,5): error TS2322: Type 'Promise<string>' is not assignable to type 'string'.
 
+    [output]
+    \`\`\`error
+          src/tools/source-code-utils.ts(127,5): error TS2322: Type 'Promise<string>' is not assignable to type 'string'.
+    \`\`\`
 
-//     # Context
-//     ${await loadProjectContext('.')}
+    ## Scenario 2: Multiple Errors
+    [input]
+    Command exited with code 1.
+    Output: 
+      > starlight@0.0.1 tsc /Users/bweissmann/starlight/starlight
+      > tsc --noEmit -p tsconfig.nopropose.json
+      src/agents/code-planner.ts(123,9): error TS2304: Cannot find name 'spawnChild'.
+      src/runner/shell.ts(76,29): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Tx'.
+      src/tools/source-code-utils.ts(127,5): error TS2322: Type 'Promise<string>' is not assignable to type 'string'.
+       ELIFECYCLE  Command failed with exit code 2.
+    Error:
 
-//     # Possible Actions
-//     - * launch editor *
-//     Launch a code editing agent to modify a source file.
+    [output]
+    \`\`\`error
+          src/agents/code-planner.ts(123,9): error TS2304: Cannot find name 'spawnChild'.
+    \`\`\`
+    \`\`\`error
+          src/runner/shell.ts(76,29): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Tx'.
+    \`\`\`
+    \`\`\`error
+          src/tools/source-code-utils.ts(127,5): error TS2322: Type 'Promise<string>' is not assignable to type 'string'.
+    \`\`\`
+    `,
+    `${errorBlob}`
+  )
+);
+const error = extractCodeSnippets(errors)[2];
+const action = await chat(
+  g4_t04(
+    system_dedent`
+    # Task
+    Fix the following error message in the codebase.
 
-//     Action format:
-//     \`\`\`json
-//     {
-//       file: string, // the file to open
-//       instructions: string // the instructions to the code editing agent
-//     }
+    Write your response in the format:
+    ## Explanation
+    {10-20 words on how to fix the error}
 
-//     `),
-//     user`
-//     # Error
-//     ${error}
-//     `
-//   )
-// )
-//   .then(extractPossibleCodeSnippet)
-//   .then(asJSON<CodeEditAction>)
+    ## Action
+    {an action, in its desired format}
 
-// await take(action)
+    # Context
+    ${await loadProjectContext(".")}
 
-// async function run(command: string) {
-//   try {
-//     return await executeCommand(command);
-//   } catch (e: any) {
-//     return e.toString()
-//   }
-// }
+    # Possible Actions
+    - * launch editor *
+    Launch a code editing agent to modify a source file.
 
-async function take(action: CodeEditAction) {
-  await codePlanner(defaultRx(), action.file, action.instructions)
+    Action format:
+    \`\`\`json
+    {
+      file: string, // the file to open
+      instructions: string // the instructions to the code editing agent
+    }
+
+    `,
+    user`
+    # Error
+    ${error}
+    `
+  )
+)
+  .then(extractPossibleCodeSnippet)
+  .then(asJSON<CodeEditAction>);
+
+await take(action);
+
+async function run(command: string) {
+  try {
+    return await executeCommand(command, { verbose: true });
+  } catch (e: any) {
+    return e.toString();
+  }
 }
 
-take({ file: await getFilepath('search'), instructions: 'move all the imports to the top of the file' })
+type CodeEditAction = { file: string; instructions: string };
+
+async function take(action: CodeEditAction) {
+  await codePlanner(
+    defaultTx(),
+    await getFilepath(action.file),
+    action.instructions
+  );
+}
+
+// take({
+//   file: "source-code-utils",
+//   instructions: "add a function reformat(sourceCode: string):string, which uses prettier to format the code",
+// });

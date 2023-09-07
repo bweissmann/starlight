@@ -1,22 +1,35 @@
 import read from "@/fs/read";
 import { chat } from "@/llm/chat";
+import asJSON, { asJSONList } from "@/llm/parser/json";
 import { g4_t02, system_dedent, user, user_dedent } from "@/llm/utils";
-import { Rx, Tx } from "@/project/context";
-import { appendLineNumbers, extractCodeSnippets } from "@/tools/source-code-utils";
+import { Tx } from "@/project/context";
+import {
+  appendLineNumbers,
+  extractCodeSnippets,
+} from "@/tools/source-code-utils";
 import { logger } from "@/utils";
 import chalk from "chalk";
+import { insertDriver } from "./code/insert-driver";
+import getInput from "@/tools/user_input";
+import { asTripleHashtagList } from "@/llm/parser/triple-hashtag";
+import propose, {
+  askToAcceptProposal,
+  proposalDiff,
+  proposalStepFilepath,
+} from "@/tools/propose";
+import { consoleLogDiff } from "@/tools/diff";
 
 /* 
 Purpose: break down a objective-driven coding task in to a sequence of insert/replace/delete implementation tasks
 */
-export async function codePlanner(rx: Rx, filename: string, task: string) {
-    const step = await codePlannerStep(rx.spawn(), filename, task)
+export async function codePlanner(tx: Tx, filename: string, task: string) {
+  const step = await codePlannerStep(tx.spawn(), filename, task);
 }
 
 async function codePlannerStep(tx: Tx, filename: string, task: string) {
-    const response = await chat(
-        g4_t02(
-            system_dedent`
+  const sections = await chat(
+    g4_t02(
+      system_dedent`
             # Objective
             You are a high level programmatic thinker and problem solver. 
             You do not directly modify source code, but you create well-scoped, actionable tasks that an implementation agent can use to modify source code. 
@@ -41,10 +54,10 @@ async function codePlannerStep(tx: Tx, filename: string, task: string) {
             - start-lineno
             - end-lineno
 
-            Each action has a description for the implementation agent including what the agent should do and why.
+            Each action has a description for the implementation agent including what the agent should do and why. 
 
-            Here is the full action spec:
-            \`\`\`action
+            Here is the full action JSON spec:
+            \`\`\`json
             {
                 type: "insert-only" | "delete-only" | "replace",
                 start-lineno: number,
@@ -58,40 +71,88 @@ async function codePlannerStep(tx: Tx, filename: string, task: string) {
             Here is your output format, surrounded by $$start$$ and $$end$$. Do not write the actual words $$start and $$end$$ in your response.
 
             $$start$$
-            # Problem statement
-            {10-20 words identifying the problem}
+            ### Task Restatement
+            {Restate the task the user wants accomplished. Take some creative license in your reformutation. If you can state the task more clearly or succinctly another way, do so. This reformulation will be used in place of the user's original request, so make sure not to miss any context or details }
 
-            # Potentially missing context
+            ### Potentially missing context
             {1-3 bullet points on potentially relevant information you do not have}
 
-            # High Level Solution
+            ### High Level Solution
             {10-30 words explaining your solution. This should be aimed at your engineering manager and focused on sound architectural decision making}
 
-            # Your solution would be wrong if...
-            {1-3 bullet points explaining scenarios in which you would be wrong given more unknown information. If none, say "N/A"}
-
-            # Counterargument
-            {0-30 words proposing a criticism of this change, why is should not be done this way, or prostilitizing an alternative. If none, say "N/A"}
-
-            # Tradeoffs
+            ### Tradeoffs
             {0-30 words explaining anything tricky. If the problem is straightforword, say "N/A"}
 
-            # Proposal
+            ### Proposal
             {a bullet pointed list, representing an implementation strategy via actions. Each bullet point should start with an action type (insert-only, replace, delete-only) in bold}
 
-            # Actions
+            ### Actions
             {a series of actions to execute your proposal, each surrounded by THREE backticks.}
 
             $$end$$
             `,
-            user`
+      user`
             # Source code of ${filename}
             \n${await read(filename).then(appendLineNumbers)}
             `,
-            user_dedent`
+      user_dedent`
             # Task
             ${task}
             `
-        )
-    ).then(extractCodeSnippets).then(logger(chalk.red))
+    )
+  ).then(asTripleHashtagList);
+
+  const taskRestatement = await getSection(sections, "Task Restatement");
+  const plan = await getSection(sections, "Proposal");
+
+  const steps = await getSection(sections, "Actions")
+    .then(extractCodeSnippets)
+    .then(
+      asJSONList<{
+        type: "insert-only" | "delete-only" | "replace";
+        "start-lineno": number;
+        "end-lineno": number;
+        description: string;
+      }>
+    );
+
+  for (let step of steps) {
+    if (step.type === "insert-only") {
+      await getInput("ready?");
+      await insertDriver(
+        spawnChild(tx),
+        filename,
+        { ...step, type: "insert-only" },
+        { taskRestatement, plan }
+      );
+    }
+  }
+
+  const lastStepProposal = await readLastStepProposal(tx, filename);
+  await propose(filename, lastStepProposal);
+  consoleLogDiff(await proposalDiff(filename));
+  await askToAcceptProposal(filename);
+}
+
+async function readLastStepProposal(tx: Tx, filepath: string) {
+  if (tx.children.length === 0) {
+    throw "tx has no children, cannot read last proposal step";
+  }
+  const lastStepTx = tx.children.slice(-1)[0];
+  return await read(proposalStepFilepath(lastStepTx, filepath));
+}
+
+async function getSection(
+  sections: {
+    identifier: string;
+    content: string;
+  }[],
+  name: string
+): Promise<string> {
+  const section = sections.find((section) => section.identifier === name);
+  if (!section) {
+    throw `Section not found: ${name}`;
+  }
+
+  return section.content;
 }

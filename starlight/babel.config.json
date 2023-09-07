@@ -8,6 +8,7 @@
         ],
         "@babel/preset-typescript"
     ],
+    "ignore": ["**/.proposal/**"],
     "plugins": [
         "./add-js-extension-plugin",
         [

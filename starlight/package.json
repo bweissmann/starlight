@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "npx ts-node entry.ts",
     "start": "node build/entry.js",
-    "build": "tsc --noEmit && babel src -d build --extensions \".ts\"",
+    "tsc": "tsc --noEmit -p tsconfig.nopropose.json",
+    "tsc-and-build": "pnpm run tsc && pnpm run build",
+    "build": "babel src -d build --extensions \".ts\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -18,7 +20,9 @@
     "dotenv": "^16.3.1",
     "ignore": "^5.2.4",
     "js-tiktoken": "^1.0.7",
+    "node-fetch": "^3.3.2",
     "openai": "4.0.0",
+    "prettier": "^3.0.3",
     "sqlite": "^5.0.1",
     "sqlite3": "^5.1.6",
     "typescript": "^5.1.6",
