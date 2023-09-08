@@ -1,6 +1,7 @@
 import { treePrettyPrint } from "@/fs/tree.js"
 import { system } from "@/llm/utils.js"
-import { loadProjectContext } from "@/project/loaders.js"
+import { Tx } from "@/project/context"
+import { loadBuildSystemContext } from "@/project/loaders.js"
 
 const codeDriverIntro = (task: string) => system`
 # Introduction
@@ -73,7 +74,7 @@ ${task}
 What is the next step you want to take?
 `
 
-const zshIntro = async (task: string, projectDirectory?: string) =>
+const zshIntro = async (tx: Tx, task: string) =>
     system`
 # Introduction
 You are an autonomous software engineering agent who accomplishes well-scoped tasks via tools.
@@ -110,13 +111,13 @@ You have access to the following tools:
 ---
 
 # Project Specific Notes
-${await loadProjectContext(projectDirectory)}
+${await loadBuildSystemContext(tx.cx)}
 
 ---
 
 # Project Structure
 
-${await treePrettyPrint(`${projectDirectory}/src`)}
+${await treePrettyPrint(`${tx.projectDirectory}/src`)}
 
 ---
 

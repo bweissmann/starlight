@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from "uuid";
+
 /* The working context for an agent */
 export type Cx = {
   name: string;
@@ -6,11 +8,13 @@ export type Cx = {
 
 /* The root context */
 export class Rx {
+  id: string;
   cx: Cx;
   children: Tx[];
   tag: "rx";
 
   constructor(cx: Cx) {
+    this.id = `[root]${uuidv4()}`;
     this.cx = cx;
     this.tag = "rx";
     this.children = [];
@@ -18,6 +22,10 @@ export class Rx {
 
   spawn() {
     return spawnChild(this);
+  }
+
+  get ancestryIds(): string[] {
+    return [];
   }
 }
 
@@ -37,10 +45,12 @@ function isRx(obj: Object): obj is Rx {
 
 /* The task context */
 export class Tx {
+  id: string;
   parent: Tx | Rx;
   children: Tx[];
 
   constructor(parent: Tx | Rx) {
+    this.id = uuidv4();
     this.parent = parent;
     this.children = [];
   }
@@ -57,18 +67,22 @@ export class Tx {
     return this.cx.projectDirectory;
   }
 
+  get ancestryIds(): string[] {
+    return [this.parent.id, ...this.parent.ancestryIds];
+  }
+
   spawn() {
     return spawnChild(this);
   }
 }
 
-export function defaultTx() {
-  return new Rx(defaultCx()).spawn();
+export function defaultTx(projectDirectory?: string) {
+  return new Rx(defaultCx(projectDirectory)).spawn();
 }
 
-export function defaultCx(): Cx {
+export function defaultCx(projectDirectory?: string): Cx {
   return {
     name: "default",
-    projectDirectory: ".",
+    projectDirectory: projectDirectory || process.cwd(),
   };
 }

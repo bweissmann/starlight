@@ -1,9 +1,9 @@
 import "dotenv/config";
-import dedent from "dedent";
-import { executeCommand, zshDriver } from "@/agents/zsh-driver";
+import "source-map-support/register.js";
+import { executeCommand } from "@/agents/zsh-driver";
 import { chat } from "@/llm/chat";
-import { g4_t04, system, system_dedent, user } from "@/llm/utils";
-import { loadProjectContext } from "@/project/loaders";
+import { g35, g4_t04, system, system_dedent, user } from "@/llm/utils";
+import { loadBuildSystemContext } from "@/project/loaders";
 import {
   extractCodeSnippets,
   extractPossibleCodeSnippet,
@@ -46,9 +46,11 @@ And if the code insertion is good then we should be able to test it even with ba
 // const args = process.argv.slice(2).join(' ');
 // await gatherContext(defaultCx(), args.trim().length > 0 ? args : `Write search`)
 
+const tx = defaultTx();
 const errorBlob = await run("pnpm run tsc");
 const errors = await chat(
-  g4_t04(
+  tx.spawn(),
+  g35(
     system`
     # Introduction
     Here is the output from running a nodejs project.
@@ -96,8 +98,9 @@ const errors = await chat(
     `${errorBlob}`
   )
 );
-const error = extractCodeSnippets(errors)[2];
+const error = extractCodeSnippets(errors)[0];
 const action = await chat(
+  tx.spawn(),
   g4_t04(
     system_dedent`
     # Task
@@ -111,7 +114,7 @@ const action = await chat(
     {an action, in its desired format}
 
     # Context
-    ${await loadProjectContext(".")}
+    ${await loadBuildSystemContext(tx.cx)}
 
     # Possible Actions
     - * launch editor *
@@ -148,8 +151,8 @@ type CodeEditAction = { file: string; instructions: string };
 
 async function take(action: CodeEditAction) {
   await codePlanner(
-    defaultTx(),
-    await getFilepath(action.file),
+    tx.spawn(),
+    await getFilepath(tx.spawn(), action.file),
     action.instructions
   );
 }

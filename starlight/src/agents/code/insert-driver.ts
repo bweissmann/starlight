@@ -33,6 +33,7 @@ export async function insertDriver(
 ) {
   const file = await readPreviousStep(tx, filepath).then(appendLineNumbers);
   const [rawPositionJSON, insertCodeSnippet] = await chat(
+    tx,
     g4_t02(
       system_dedent`
             # Introduction
@@ -40,7 +41,7 @@ export async function insertDriver(
             You will INSERT source code according to the task instructions
             
             # Style Guide
-            ${await loadProjectStyleGuide(tx)}
+            ${await loadProjectStyleGuide(tx.cx)}
 
             # Background - Task
             For context, here is the original job to be done

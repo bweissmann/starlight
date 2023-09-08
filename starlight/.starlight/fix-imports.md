@@ -1,1 +1,0 @@
-All imports of files within the project (non npm imports) should end in ".js" 

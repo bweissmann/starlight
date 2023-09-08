@@ -1,16 +1,14 @@
 import { readOrEmptyString } from "@/fs/read";
-import { Tx } from "./context";
-export async function loadProjectContext(projectDirectory?: string) {
-  return loadProjectFile("context.md", projectDirectory);
+import { Cx, Tx } from "./context";
+
+export async function loadBuildSystemContext(cx: Cx) {
+  return loadProjectFile(cx, "build.md");
 }
 
-export async function loadProjectStyleGuide(tx: Tx) {
-  return loadProjectFile("style.md", tx.projectDirectory);
+export async function loadProjectStyleGuide(cx: Cx) {
+  return loadProjectFile(cx, "style.md");
 }
 
-async function loadProjectFile(filename: string, projectDirectory?: string) {
-  if (projectDirectory === undefined) {
-    return "";
-  }
-  return readOrEmptyString(`${projectDirectory}/.starlight/${filename}`);
+async function loadProjectFile(cx: Cx, filename: string) {
+  return readOrEmptyString(`${cx.projectDirectory}/.starlight/${filename}`);
 }

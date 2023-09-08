@@ -1,26 +1,26 @@
 import { sequence } from "@/llm/chat";
 import asJSON from "@/llm/parser/json";
 import { g4, system } from "@/llm/utils";
-import { Cx } from "@/project/context";
+import { Cx, Tx } from "@/project/context";
 import { extractCodeSnippets } from "@/tools/source-code-utils";
 import { logger } from "@/utils";
 import dedent from "dedent";
 
 type SearchAction = {
-    tool: 'search',
-    queries: string[]
-}
+  tool: "search";
+  queries: string[];
+};
 
 type ExecuteReplanAction = {
-    tool: 'execute then replan'
-}
+  tool: "execute then replan";
+};
 
 type ToolAction = SearchAction | ExecuteReplanAction;
 
-export default async function gatherContext(cx: Cx, input: string) {
-    const initialPlan = await sequence([
-        g4(
-            system(dedent`
+export default async function gatherContext(tx: Tx, input: string) {
+  const initialPlan = await sequence(tx, [
+    g4(
+      system(dedent`
             # Objective
             The user wants help with some modification to their codebase.
             Make a plan for how to help them.
@@ -31,40 +31,40 @@ export default async function gatherContext(cx: Cx, input: string) {
             # Example
             ${fewShots}
             `),
-            input
-        )
-    ])
-        .then(extractCodeSnippets)
-        .then(logger())
-        .then(snippets => snippets.map(asJSON<ToolAction>))
-        .then(async actions => await Promise.all(actions))
+      input
+    ),
+  ])
+    .then(extractCodeSnippets)
+    .then(logger())
+    .then((snippets) => snippets.map(asJSON<ToolAction>))
+    .then(async (actions) => await Promise.all(actions));
 }
 
 async function executePlan(plan: ToolAction[]) {
-    const results = [];
-    for (const action of plan) {
-        switch (action.tool) {
-            case 'search':
-                const searchResults = [];
-                for (const query of action.queries) {
-                    const searchResult = await {};
-                    searchResults.push(searchResult);
-                }
-                results.push(searchResults);
-                break;
-            case 'execute then replan':
-               return results
-            default:
-                throw new Error(`Unknown tool: ${action}`);
+  const results = [];
+  for (const action of plan) {
+    switch (action.tool) {
+      case "search":
+        const searchResults = [];
+        for (const query of action.queries) {
+          const searchResult = await {};
+          searchResults.push(searchResult);
         }
+        results.push(searchResults);
+        break;
+      case "execute then replan":
+        return results;
+      default:
+        throw new Error(`Unknown tool: ${action}`);
     }
-    return results;
+  }
+  return results;
 }
 
 const tools = [
-    "search: global search for a term in project",
-    "execute then replan: the results of previous steps are necessary for future planning"
-]
+  "search: global search for a term in project",
+  "execute then replan: the results of previous steps are necessary for future planning",
+];
 
 const fewShots = `
 ## Input
@@ -104,4 +104,4 @@ We need to find the function to modify.
 2. *execute then replan*
 If we can't find the function we should expand our search to other variants or ask for clarification.
 ...
-`
+`;

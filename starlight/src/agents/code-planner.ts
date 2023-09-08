@@ -10,7 +10,7 @@ import {
 import { logger } from "@/utils";
 import chalk from "chalk";
 import { insertDriver } from "./code/insert-driver";
-import getInput from "@/tools/user_input";
+import getInput from "@/tools/user-input";
 import { asTripleHashtagList } from "@/llm/parser/triple-hashtag";
 import propose, {
   askToAcceptProposal,
@@ -23,11 +23,12 @@ import { consoleLogDiff } from "@/tools/diff";
 Purpose: break down a objective-driven coding task in to a sequence of insert/replace/delete implementation tasks
 */
 export async function codePlanner(tx: Tx, filename: string, task: string) {
-  const step = await codePlannerStep(tx.spawn(), filename, task);
+  const step = await codePlannerStep(tx, filename, task);
 }
 
 async function codePlannerStep(tx: Tx, filename: string, task: string) {
   const sections = await chat(
+    tx,
     g4_t02(
       system_dedent`
             # Objective
@@ -84,7 +85,12 @@ async function codePlannerStep(tx: Tx, filename: string, task: string) {
             {0-30 words explaining anything tricky. If the problem is straightforword, say "N/A"}
 
             ### Proposal
-            {a bullet pointed list, representing an implementation strategy via actions. Each bullet point should start with an action type (insert-only, replace, delete-only) in bold}
+            {
+              a bullet pointed list, representing an implementation strategy via actions. Each bullet point should start with an action type in bold
+              For example:
+              - *replace* ...
+              - *insert-only* ...
+            }
 
             ### Actions
             {a series of actions to execute your proposal, each surrounded by THREE backticks.}
@@ -120,7 +126,7 @@ async function codePlannerStep(tx: Tx, filename: string, task: string) {
     if (step.type === "insert-only") {
       await getInput("ready?");
       await insertDriver(
-        spawnChild(tx),
+        tx.spawn(),
         filename,
         { ...step, type: "insert-only" },
         { taskRestatement, plan }

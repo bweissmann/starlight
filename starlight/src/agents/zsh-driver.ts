@@ -3,7 +3,7 @@ import { g4 } from "@/llm/utils";
 import read, { fileExists } from "@/fs/read";
 import { treePrettyPrint } from "@/fs/tree";
 import { extractCodeSnippets } from "@/tools/source-code-utils";
-import getInput, { askMultiChoice } from "@/tools/user_input";
+import getInput, { askMultiChoice } from "@/tools/user-input";
 import asJSON from "@/llm/parser/json";
 import chalk from "chalk";
 import { zshDriver as prompts } from "./prompt";
@@ -25,11 +25,11 @@ type CommandInput = {
 };
 
 export async function zshDriver(tx: Tx, task: string) {
-  const intro = await prompts.intro(task, tx.projectDirectory);
+  const intro = await prompts.intro(tx, task);
   const reminder = prompts.reminder(task);
   const extractTakeaways = prompts.extractTakeaways(task);
 
-  const initialresponse = await sequence([g4([intro, reminder])]);
+  const initialresponse = await sequence(tx, [g4([intro, reminder])]);
 
   try {
     let previousresponse = initialresponse;
@@ -44,12 +44,12 @@ export async function zshDriver(tx: Tx, task: string) {
       const result = await interpretAndExecute(cmd);
       console.log(chalk.cyan(result));
       await pause(`here's the result ^`);
-      const takeaways = await sequence([
+      const takeaways = await sequence(tx, [
         g4(...previousHistoryWithoutReminder, result, extractTakeaways),
       ]);
       await pause("review takeaways");
 
-      const nextllmresponse = await sequence([
+      const nextllmresponse = await sequence(tx, [
         g4(...previousHistoryWithoutReminder, takeaways.message, reminder),
       ]);
       previousresponse = nextllmresponse;

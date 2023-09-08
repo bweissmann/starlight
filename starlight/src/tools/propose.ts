@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import { filepath_within_subdirectory, write_to_subdirectory } from '../fs/subdirectory';
 import { consoleLogDiff, diff } from './diff';
-import { askMultiChoice } from './user_input';
+import { askMultiChoice } from './user-input';
 import path from 'path';
 import { Tx, indexInParent } from '@/project/context';
 import write from '@/fs/write';

@@ -1,0 +1,2 @@
+- Code written in typescript in /src and compiled to javascript in /build
+- We use pnpm instead of npm for everything.
