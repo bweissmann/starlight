@@ -67,6 +67,13 @@ export class Tx {
     return this.cx.projectDirectory;
   }
 
+  get rx(): Rx {
+    if (isRx(this.parent)) {
+      return this.parent;
+    }
+    return this.parent.rx;
+  }
+
   get ancestryIds(): string[] {
     return [this.parent.id, ...this.parent.ancestryIds];
   }

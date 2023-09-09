@@ -1,5 +1,5 @@
 import "dotenv/config";
-import "source-map-support/register";
+import "source-map-support/register.js";
 import { sequence } from "@/llm/chat";
 import { g35, system } from "@/llm/utils";
 import getInput from "@/tools/user-input";
@@ -10,6 +10,7 @@ import path from "path";
 import process from "process";
 import { zshDriver } from "@/agents/zsh-driver";
 import { Tx, defaultTx } from "@/project/context";
+import { emit } from "@/redis";
 type Command = "project" | "create file" | "modify file" | "zsh";
 
 async function repl(tx: Tx): Promise<void> {
@@ -85,4 +86,8 @@ async function repl(tx: Tx): Promise<void> {
   return await repl(tx.spawn()); // recursive repl
 }
 
-repl(defaultTx(process.argv[2]));
+const tx = defaultTx(process.argv[2]);
+await emit(tx, "INIT", {});
+console.log(tx.rx.id);
+
+repl(tx);

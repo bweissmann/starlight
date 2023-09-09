@@ -14,7 +14,7 @@ import { writeToCache as writeToCache, dbGetCachedResult } from "../db";
 import { Tx } from "@/project/context";
 import fs from "fs/promises";
 import path from "path";
-import { log } from "./logging";
+import { emit } from "../redis";
 
 const __openai = new OpenAI(); // never use this directly, always use getOpenAI() so we can keep track of all the raw api entry points
 export function getOpenAI() {
@@ -104,7 +104,7 @@ export async function chat(
   spec: ChatSpec
 ): Promise<ChatContinuationResult> {
   const result = await chatInternal(spec);
-  await log(tx, { spec, result });
+  await emit(tx, "LLM_CHAT", { spec, result });
 
   return {
     message: result,

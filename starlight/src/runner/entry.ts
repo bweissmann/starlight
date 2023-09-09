@@ -12,6 +12,8 @@ import asJSON from "@/llm/parser/json";
 import { codePlanner } from "@/agents/code-planner";
 import { getFilepath } from "@/fs/get-filepath";
 import { defaultTx } from "@/project/context";
+import getInput from "@/tools/user-input";
+import { emit } from "@/redis";
 
 /*
 
@@ -46,7 +48,19 @@ And if the code insertion is good then we should be able to test it even with ba
 // const args = process.argv.slice(2).join(' ');
 // await gatherContext(defaultCx(), args.trim().length > 0 ? args : `Write search`)
 
-const tx = defaultTx();
+const tx = defaultTx(process.argv[2]);
+await emit(tx, "INIT", {});
+console.log(tx.rx.id);
+
+
+async function run(command: string) {
+  try {
+    return await executeCommand(command, { verbose: true });
+  } catch (e: any) {
+    return e.toString();
+  }
+}
+
 const errorBlob = await run("pnpm run tsc");
 const errors = await chat(
   tx.spawn(),
@@ -81,7 +95,7 @@ const errors = await chat(
       src/agents/code-planner.ts(123,9): error TS2304: Cannot find name 'spawnChild'.
       src/runner/shell.ts(76,29): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Tx'.
       src/tools/source-code-utils.ts(127,5): error TS2322: Type 'Promise<string>' is not assignable to type 'string'.
-       ELIFECYCLE  Command failed with exit code 2.
+      ELIFECYCLE Command failed with exit code 2.
     Error:
 
     [output]
@@ -126,7 +140,7 @@ const action = await chat(
       file: string, // the file to open
       instructions: string // the instructions to the code editing agent
     }
-
+    \`\`\`
     `,
     user`
     # Error
@@ -138,14 +152,6 @@ const action = await chat(
   .then(asJSON<CodeEditAction>);
 
 await take(action);
-
-async function run(command: string) {
-  try {
-    return await executeCommand(command, { verbose: true });
-  } catch (e: any) {
-    return e.toString();
-  }
-}
 
 type CodeEditAction = { file: string; instructions: string };
 
