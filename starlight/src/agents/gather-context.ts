@@ -2,7 +2,7 @@ import { sequence } from "@/llm/chat";
 import asJSON from "@/llm/parser/json";
 import { g4, system } from "@/llm/utils";
 import { Cx, Tx } from "@/project/context";
-import { extractCodeSnippets } from "@/tools/source-code-utils";
+import { extractFencedSnippets } from "@/tools/source-code-utils";
 import { logger } from "@/utils";
 import dedent from "dedent";
 
@@ -34,7 +34,7 @@ export default async function gatherContext(tx: Tx, input: string) {
       input
     ),
   ])
-    .then(extractCodeSnippets)
+    .then(extractFencedSnippets)
     .then(logger())
     .then((snippets) => snippets.map(asJSON<ToolAction>))
     .then(async (actions) => await Promise.all(actions));

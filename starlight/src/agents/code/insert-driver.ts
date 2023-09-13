@@ -13,7 +13,7 @@ import propose, {
 } from "@/tools/propose";
 import {
   appendLineNumbers,
-  extractCodeSnippets,
+  extractFencedSnippets,
   takeAfter,
   takeUntil,
 } from "@/tools/source-code-utils";
@@ -81,7 +81,7 @@ ${takeUntil(file, actionSpec["start-lineno"], 8)}
 ${takeAfter(file, actionSpec["start-lineno"], 8)}
             `
     )
-  ).then(extractCodeSnippets);
+  ).then(extractFencedSnippets);
 
   const afterLineNo = await asJSON<{ "insert after lineno": number }>(
     rawPositionJSON

@@ -21,6 +21,14 @@ function sort<T extends object | any[]>(x: T): T {
   return x;
 }
 
+export async function safely<R, A extends any[]>(fn: (...args: A) => R, ...args: A) {
+  try {
+    return await fn(...args);
+  } catch (e: any) {
+    return e.toString() as string;
+  }
+}
+
 export function indent(lines: string, indent: string = "  ") {
   return lines
     .split("\n")

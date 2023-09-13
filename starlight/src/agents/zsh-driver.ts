@@ -2,7 +2,7 @@ import { sequence } from "@/llm/chat";
 import { g4 } from "@/llm/utils";
 import read, { fileExists } from "@/fs/read";
 import { treePrettyPrint } from "@/fs/tree";
-import { extractCodeSnippets } from "@/tools/source-code-utils";
+import { extractFencedSnippets } from "@/tools/source-code-utils";
 import getInput, { askMultiChoice } from "@/tools/user-input";
 import asJSON from "@/llm/parser/json";
 import chalk from "chalk";
@@ -39,7 +39,7 @@ export async function zshDriver(tx: Tx, task: string) {
         ...previousresponse.fullHistory.slice(-1),
       ];
       const cmd = await asJSON<CommandInput>(
-        extractCodeSnippets(previousresponse.message)[0]
+        extractFencedSnippets(previousresponse.message)[0]
       );
       const result = await interpretAndExecute(cmd);
       console.log(chalk.cyan(result));
@@ -152,10 +152,7 @@ async function dangerouslyExecuteTerminalCommands(filepath: string) {
 
   return output;
 }
-export async function executeCommand(
-  command: string,
-  opts?: { verbose: boolean }
-): Promise<string> {
+export async function executeCommand(command: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const [cmd, ...args] = command.split(" ");
 

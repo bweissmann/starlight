@@ -8,13 +8,25 @@ import asJSON from "@/llm/parser/json";
 import { g35, g4, system, user, assistant } from "@/llm/utils";
 import prettier from "prettier";
 import { Tx } from "@/project/context";
-export function extractCodeSnippets(
+
+/**
+ * A code fenced snippet is a piece of code that is enclosed within triple backticks (```). 
+ * It is commonly used in markdown files for code syntax highlighting.
+ * 
+ * Example:
+ * ```javascript
+ * const greeting = 'Hello, world!';
+ * console.log(greeting);
+ * ```
+ */
+
+export function extractFencedSnippets(
   input: string | ChatContinuationResult
 ): string[] {
-  return _extractCodeSnippets(stringifyChatResult(input));
+  return _extractFencedSnippets(stringifyChatResult(input));
 }
 
-function _extractCodeSnippets(input: string): string[] {
+function _extractFencedSnippets(input: string): string[] {
   const lines = input.split("\n");
   const snippets: string[] = [];
   let withinSnippet = false;
@@ -35,10 +47,10 @@ function _extractCodeSnippets(input: string): string[] {
   return snippets;
 }
 
-export function extractPossibleCodeSnippet(
+export function extractPossibleFencedSnippet(
   input: string | ChatContinuationResult
 ): string {
-  const snippets = extractCodeSnippets(input);
+  const snippets = extractFencedSnippets(input);
   if (snippets.length === 0) {
     return stringifyChatResult(input);
   }
@@ -98,7 +110,7 @@ export async function insertSnippetIntoFile(
         `)
     ),
   ])
-    .then(extractPossibleCodeSnippet)
+    .then(extractPossibleFencedSnippet)
     .then(asJSON<{ startingLine: number; endingLine: number }>);
 
   return [

@@ -5,8 +5,8 @@ import { asTripleHashtagList } from "@/llm/parser/triple-hashtag";
 import { g4, assistant, system, user } from "@/llm/utils";
 import {
   appendLineNumbers,
-  extractCodeSnippets,
-  extractPossibleCodeSnippet,
+  extractFencedSnippets,
+  extractPossibleFencedSnippet,
 } from "@/tools/source-code-utils";
 import { consoleLogDiff } from "@/tools/diff";
 import propose, {
@@ -81,7 +81,7 @@ export async function codeDriver(tx: Tx, filename: string, task: string) {
   const steps: Step[] = await Promise.all(
     (await asTripleHashtagList(initialresponse.message))
       .map((r) => r.content)
-      .map(extractCodeSnippets)
+      .map(extractFencedSnippets)
       .map(async (raw) => {
         const command = await asJSON<Command>(raw[0]);
         const originalFileContents = await read(filename);
@@ -257,7 +257,7 @@ ${currentFileContentsAroundChange}
 `
     ),
   ])
-    .then(extractPossibleCodeSnippet)
+    .then(extractPossibleFencedSnippet)
     .then(asJSON<{ "start-line-number": number; "end-line-number": number }>)
     .then((result) => ({
       start: result["start-line-number"],

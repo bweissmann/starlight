@@ -3,7 +3,7 @@ import { MaybePromise } from "@/utils";
 import tree from "@/fs/tree";
 import pretty_print_directory from "@/fs/pretty_print_directory";
 import { subsequenceMatch } from "@/tools/search";
-import { extractPossibleCodeSnippet } from "@/tools/source-code-utils";
+import { extractPossibleFencedSnippet } from "@/tools/source-code-utils";
 import asJSON from "@/llm/parser/json";
 import path from "path";
 import dedent from "dedent";
@@ -33,7 +33,7 @@ export async function getFilepath(tx: Tx, _name: MaybePromise<string>) {
                 `
       )
     )
-      .then(extractPossibleCodeSnippet)
+      .then(extractPossibleFencedSnippet)
       .then(asJSON<{ path: string }>)
       .then((result) => path.resolve(result.path));
   }

@@ -5,7 +5,7 @@ import { g4_t02, system_dedent, user, user_dedent } from "@/llm/utils";
 import { Tx } from "@/project/context";
 import {
   appendLineNumbers,
-  extractCodeSnippets,
+  extractFencedSnippets,
 } from "@/tools/source-code-utils";
 import { logger } from "@/utils";
 import chalk from "chalk";
@@ -112,7 +112,7 @@ async function codePlannerStep(tx: Tx, filename: string, task: string) {
   const plan = await getSection(sections, "Proposal");
 
   const steps = await getSection(sections, "Actions")
-    .then(extractCodeSnippets)
+    .then(extractFencedSnippets)
     .then(
       asJSONList<{
         type: "insert-only" | "delete-only" | "replace";
