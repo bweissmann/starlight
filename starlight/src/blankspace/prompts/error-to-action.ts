@@ -6,19 +6,16 @@ import { loadBuildSystemContext } from "@/project/loaders";
 import asJSON from "@/llm/parser/json";
 import { Forward, ImplOf } from "../utility-types";
 
-export type Prompt = {
-  spec: typeof spec;
-  inferred: {
-    inputs: { error: string };
-    returns: CodeEditAction;
-  };
+type Inferred = {
+  inputs: { error: string };
+  returns: CodeEditAction;
 };
 
 const spec = {
-  tag: "errors-to-actions",
+  tag: "error-to-actions",
 } as const;
 
-const forward: Forward<Prompt> = async (tx: Tx, { error }) => {
+const forward: Forward<Prompt> = async (tx: Tx, inputs) => {
   return await chat(
     tx,
     g4_t04(
@@ -50,7 +47,7 @@ const forward: Forward<Prompt> = async (tx: Tx, { error }) => {
     `,
       user`
     # Error
-    ${error}
+    ${inputs.error}
     `
     )
   )
@@ -60,6 +57,10 @@ const forward: Forward<Prompt> = async (tx: Tx, { error }) => {
 
 export type CodeEditAction = { file: string; instructions: string };
 
+export type Prompt = {
+  spec: typeof spec;
+  inferred: Inferred;
+};
 export const emptyinstance: Prompt = {} as Prompt;
 export const Impl: ImplOf<Prompt> = {
   spec,

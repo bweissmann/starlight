@@ -3,7 +3,7 @@ import { impls, type GeneratedPrompts } from "./generated-prompts";
 import { Tx } from "@/project/context";
 import isEqual from "lodash.isequal";
 
-export class blankspace {
+export default class blankspace {
   static build<S extends SpecOf<GeneratedPrompts>>(spec: S) {
     return new space<S, PromptOf<S>>(spec, this.forwardOfSpec(spec));
   }
@@ -14,7 +14,7 @@ export class blankspace {
   >(spec: S): Forward<P> {
     for (let iter of impls) {
       if (isEqual(spec, iter.spec)) {
-        return iter.forward as Forward<P>;
+        return iter.forward as unknown as Forward<P>;
       }
     }
 

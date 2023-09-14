@@ -4,20 +4,19 @@ import { Tx } from "@/project/context";
 import { extractFencedSnippets } from "@/tools/source-code-utils";
 import { Forward, ImplOf, SpecOf } from "../utility-types";
 
-export type PromptSPLITERRORS = {
-  spec: typeof specSPLITERRORS;
+export type Prompt = {
+  spec: typeof spec;
   inferred: {
     inputs: { errorBlob: string };
     returns: string[];
   };
 };
 
-const specSPLITERRORS = {
+const spec = {
   tag: "split-errors",
-  value: "some value here",
 } as const;
 
-const forward: Forward<PromptSPLITERRORS> = async (tx: Tx, { errorBlob }) => {
+const forward: Forward<Prompt> = async (tx: Tx, inputs) => {
   return await chat(
     tx,
     g35(
@@ -65,13 +64,13 @@ const forward: Forward<PromptSPLITERRORS> = async (tx: Tx, { errorBlob }) => {
           src/tools/source-code-utils.ts(127,5): error TS2322: Type 'Promise<string>' is not assignable to type 'string'.
     \`\`\`
     `,
-      `${errorBlob}`
+      `${inputs.errorBlob}`
     )
   ).then(extractFencedSnippets);
 };
 
-export const emptyinstance: PromptSPLITERRORS = {} as PromptSPLITERRORS;
-export const Impl: ImplOf<PromptSPLITERRORS> = {
-  spec: specSPLITERRORS,
+export const emptyinstance: Prompt = {} as Prompt;
+export const Impl: ImplOf<Prompt> = {
+  spec: spec,
   forward,
 };

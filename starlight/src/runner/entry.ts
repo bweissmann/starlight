@@ -11,7 +11,7 @@ import { getFilepath } from "@/fs/get-filepath";
 import { defaultTx } from "@/project/context";
 import { emit } from "@/redis";
 import { safely } from "@/utils";
-import { blankspace } from "@/blankspace/blankspace";
+import blankspace from "@/blankspace/blankspace";
 import { CodeEditAction } from "@/blankspace/prompts/error-to-action";
 
 /*
@@ -55,12 +55,11 @@ const errorBlob = await safely(executeCommand, "pnpm run tsc");
 const errors = await blankspace
   .build({
     tag: "split-errors",
-    value: "some value here",
   })
   .run(tx, { errorBlob });
 
 const action = await blankspace
-  .build({ tag: "errors-to-actions" })
+  .build({ tag: "error-to-actions" })
   .run(tx, { error: errors[0] });
 
 await take(action);
@@ -72,6 +71,7 @@ async function take(action: CodeEditAction) {
     action.instructions
   );
 }
+
 
 // take({
 //   file: "source-code-utils",
