@@ -40,7 +40,7 @@ async function callback(event: { uuid: string; type: string; input: string }) {
       .build(
         `Given this prompt, come up with a one to four word name for the prompt, all lowercase, dash-separated. I prefer a verb to be the first word if it makes sense.`
       )
-      .run(defaultTx(), [event.input]);
+      .run([event.input]);
     await generatePrompt(defaultTx(), event.input, filenameIdentifier);
   }
 }

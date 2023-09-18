@@ -10,6 +10,9 @@ const namespaces = [
   await import("./prompts/fix-error-message_v5.js"),
   await import("./prompts/fix-error-message_v6.js"),
   await import("./prompts/parse-user-command.js"),
+  await import(
+    "./prompts/name-generator.js"
+  ),
   // append namespace
 ];
 

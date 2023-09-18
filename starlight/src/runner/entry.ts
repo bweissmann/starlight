@@ -62,22 +62,27 @@ const errors = await blankspace
   return a string[]
   Show example input/outputs in different programming languages.`
   )
-  .run(tx, [errorBlob]);
+  .with(tx)
+  .run([errorBlob]);
 
-const action = await blankspace.build(
-  `The user will give you an error message and you'll write the action you will take to fix it. 
+const action = await blankspace
+  .build(
+    `The user will give you an error message and you'll write the action you will take to fix it. 
   The receiver of your action won't have access to the original error unless you give it to them.
 
-  Your action will have this XML format:
+  Your action will have this JSON format:
   {
     file: string, // the file to open
     instructions: string // the instructions to the code editing agent
   }`
-).run(tx, [
-  `# Context
+  )
+  .with(tx)
+  .run([
+    `# Context
   ${await loadBuildSystemContext(tx.cx)}
   `,
-  errors[0]]);
+    errors[0]
+  ]);
 
 throw "done!";
 

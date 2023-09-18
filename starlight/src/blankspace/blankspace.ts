@@ -7,7 +7,7 @@ import type {
   SpecToInferred,
 } from "./utility-types";
 import { impls, type GeneratedPrompts } from "./generated-prompts";
-import { Tx } from "@/project/context";
+import { Tx, defaultTx } from "@/project/context";
 import isEqual from "lodash.isequal";
 
 export default class blankspace {
@@ -31,19 +31,24 @@ export default class blankspace {
   }
 }
 
-export class space<Filename, S extends SpecOf<GeneratedPrompts>> {
+export class space<F, S extends SpecOf<GeneratedPrompts>> {
   private spec: S;
   private forward: Forward<PromptOf<S>>;
+  private tx?: Tx;
 
-  constructor(spec: S, forward: Forward<PromptOf<S>>) {
+  constructor(spec: S, forward: Forward<PromptOf<S>>, tx?: Tx) {
     this.spec = spec;
+    this.tx = tx;
     this.forward = forward;
   }
 
+  with(tx: Tx) {
+    return new space<F, S>(this.spec, this.forward, tx);
+  }
+
   async run(
-    tx: Tx,
-    inputs: SpecToInferred[S]["inputs"]
+    inputs: SpecToInferred[S]["inputs"],
   ): Promise<SpecToInferred[S]["returns"]> {
-    return this.forward(tx, inputs);
+    return this.forward(this.tx ?? defaultTx(), inputs);
   }
 }
