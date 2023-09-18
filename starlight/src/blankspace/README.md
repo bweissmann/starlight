@@ -47,6 +47,8 @@ const action: {
     instructions: string;
 }
 ``` 
+
+### diving deeper
 And we can inspect the raw prompt becuase the filename is a generic type argument of build
 ```
 (method) blankspace.build<"fix-error-message_v3.ts", "The user will give you an error message and you'll...
@@ -57,7 +59,38 @@ async function parse(raw: string): Promise<Prompt["inferred"]["returns"]> {
   return asJSON<{ file: string; instructions: string }>(raw);
 }
 ```
+And read the raw prompt:
+```
+const prompt = \`
 
+# Task Statement
+You are tasked with generating a set of actions to resolve a given error message. The error message will be provided to you, and you are to formulate a response detailing the file to be opened and the instructions to be followed in order to rectify the error. It is important to note that the recipient of your action will not have access to the original error message unless you provide it to them.
+
+# Output Format
+Your output should be a JSON object with the following structure:
+
+\`\`\`json
+{
+  "file": "<string>", // the file to open
+  "instructions": "<string>" // the instructions to the code editing agent
+}
+\`\`\`
+
+# Examples
+**Input**
+\`\`\`
+Uncaught TypeError: Cannot read property 'map' of undefined at App.js:25
+\`\`\`
+
+**Output**
+\`\`\`json
+{
+  "file": "App.js",
+  "instructions": "Check line 25. There seems to be a TypeError due to trying to read a property 'map' of an undefined object. Ensure the object is defined before trying to access its properties."
+}
+\`\`\`
+...
+```
 
 # details
 
