@@ -2,14 +2,14 @@
 
 writes code with gpt-4
 
-## notes
+# structure
 
-right now there are two semi-nonfunctional agents
-- `shell-driver.ts` (navigates terminal with tree, cat, touch, mkdir)
-- `coding-driver.ts` (modifies files with insert, replace, copy/paste, delete)
+- starlight: nodejs standalone program with core logic, controlled and monitored via CLI. Monitoring events also streamed out via redis.
+- starlight/blankspace: prompt compilation subsystem. Generates prompts, output parsers, and typescript annotations from natural language specs
+- mirrorball: VSCode extension which adds a "Quick Fix" to compile blankspace prompts without leaving VSCode 
+- midnight: create-react-app frontend -- connects to starlight instances (via redis) and lets users view event streams in real time (future: will be bidirectional with user-input)
+- server: simple express server to manage client (midnight) connections to redis and route events accordingly
 
-changes are written to `.proposal` directories so changes don't clobber your code:
-`src/folder/file.ts`
-`src/folder/.proposal/file.ts`
+# usage
 
-from proposals, we generate diffs and prompt the user to accept changes
+its a bit in flux right now, ill update the readme when its more stable.

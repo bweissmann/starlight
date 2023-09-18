@@ -21,7 +21,10 @@ function sort<T extends object | any[]>(x: T): T {
   return x;
 }
 
-export async function safely<R, A extends any[]>(fn: (...args: A) => R, ...args: A) {
+export async function safely<R, A extends any[]>(
+  fn: (...args: A) => R,
+  ...args: A
+) {
   try {
     return await fn(...args);
   } catch (e: any) {
@@ -36,16 +39,20 @@ export function indent(lines: string, indent: string = "  ") {
     .join("\n");
 }
 
+export function makeSafeFromBackticks(input: string) {
+  return input.replace(/(?<!\\)`/g, "\\`");
+}
+
 export function isString(x: any): x is string {
   return typeof x === "string";
 }
 
-export function vomit(x: any) {
+export function vomit(x: any, clean: boolean = false) {
   if (isString(x)) {
     return x;
   }
 
-  return JSON.stringify(sort(x));
+  return clean ? JSON.stringify(sort(x), null, 2) : JSON.stringify(sort(x));
 }
 
 export function cast<T>(x: any): T {
@@ -60,7 +67,8 @@ export function logger(): <T>(x: T) => T;
 export function logger(ch: ChalkInstance): <T>(x: T) => T;
 export function logger(ch?: ChalkInstance): <T>(x: T) => T {
   return (x) => {
-    console.log(ch ? ch(x) : x);
+    const stringified = vomit(x, true);
+    console.log(ch ? ch(stringified) : stringified);
     return x;
   };
 }

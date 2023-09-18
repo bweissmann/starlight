@@ -15,7 +15,7 @@ type SpecToMarker<S> = S extends { intro: string; examples: string[] }
   ? `@@TAG@@=> ${S["tag"]}`
   : never;
 
-type PromptOfSpec<S, P> = P extends { spec: infer IterSpec }
+export type PromptOfSpec<S, P> = P extends { spec: infer IterSpec }
   ? SpecToMarker<S> extends SpecToMarker<IterSpec>
     ? P
     : never
@@ -23,7 +23,7 @@ type PromptOfSpec<S, P> = P extends { spec: infer IterSpec }
 
 export type PromptOf<S> = PromptOfSpec<S, GeneratedPrompts>;
 export type SpecOf<P> = P extends { spec: infer S } ? S : never;
-
+export type FilenameOf<P> = P extends { filename: infer F } ? F : never;
 export type ImplOf<P> = {
   spec: SpecOf<P>;
   forward: InferForward<P>;
@@ -37,3 +37,21 @@ export type Forward<P extends { inferred: { inputs: any; returns: any } }> = (
   tx: Tx,
   inputs: P["inferred"]["inputs"]
 ) => Promise<P["inferred"]["returns"]>;
+
+type SpecToInferredGeneric<P extends { spec: string; inferred: any }> = {
+  [K in P as K["spec"]]: K["inferred"];
+};
+
+export type SpecToInferred = SpecToInferredGeneric<GeneratedPrompts>;
+
+type SpecToFilenameGeneric<P extends { spec: string; filename: string }> = {
+  [K in P as K["spec"]]: K["filename"];
+};
+
+export type SpecToFilename = SpecToFilenameGeneric<GeneratedPrompts>;
+
+type FilenameToSpecGeneric<P extends { spec: string; filename: string }> = {
+  [K in P as K["filename"]]: K["spec"];
+};
+
+export type FilenameToSpec = FilenameToSpecGeneric<GeneratedPrompts>;

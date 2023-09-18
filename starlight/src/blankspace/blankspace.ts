@@ -1,11 +1,20 @@
-import type { Forward, PromptOf, SpecOf } from "./utility-types";
+import type {
+  Forward,
+  PromptOf,
+  PromptOfSpec,
+  SpecOf,
+  SpecToFilename,
+  SpecToInferred,
+} from "./utility-types";
 import { impls, type GeneratedPrompts } from "./generated-prompts";
 import { Tx } from "@/project/context";
 import isEqual from "lodash.isequal";
 
 export default class blankspace {
-  static build<S extends SpecOf<GeneratedPrompts>>(spec: S) {
-    return new space<S, PromptOf<S>>(spec, this.forwardOfSpec(spec));
+  static build<F extends SpecToFilename[S], S extends SpecOf<GeneratedPrompts>>(
+    spec: S
+  ) {
+    return new space<F, S>(spec, this.forwardOfSpec(spec));
   }
 
   static forwardOfSpec<
@@ -22,19 +31,19 @@ export default class blankspace {
   }
 }
 
-export class space<S extends SpecOf<GeneratedPrompts>, P extends PromptOf<S>> {
+export class space<Filename, S extends SpecOf<GeneratedPrompts>> {
   private spec: S;
-  private forward: Forward<P>;
+  private forward: Forward<PromptOf<S>>;
 
-  constructor(spec: S, forward: Forward<P>) {
+  constructor(spec: S, forward: Forward<PromptOf<S>>) {
     this.spec = spec;
     this.forward = forward;
   }
 
   async run(
     tx: Tx,
-    inputs: P["inferred"]["inputs"]
-  ): Promise<P["inferred"]["returns"]> {
+    inputs: SpecToInferred[S]["inputs"]
+  ): Promise<SpecToInferred[S]["returns"]> {
     return this.forward(tx, inputs);
   }
 }

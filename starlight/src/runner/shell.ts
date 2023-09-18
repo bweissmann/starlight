@@ -11,6 +11,7 @@ import process from "process";
 import { zshDriver } from "@/agents/zsh-driver";
 import { Tx, defaultTx } from "@/project/context";
 import { emit } from "@/redis";
+import blankspace from "@/blankspace/blankspace";
 type Command = "project" | "create file" | "modify file" | "zsh";
 
 async function repl(tx: Tx): Promise<void> {
@@ -29,41 +30,11 @@ async function repl(tx: Tx): Promise<void> {
   );
   const command =
     commandExactMatch ||
-    (await sequence(tx, [
-      g35(
-        system(`
-        # Your job is to parse a command from the user's message.
-        
-        You know the following commands:
-
-        ## project
-        > aliases: p, project, switch, change project, use project 
-        - switch the active project to <directory> 
-
-        ## create file
-        > aliases: c, new file, create, create a file
-        - Creates a file
-
-        ## modify file
-        > aliases: m, modify, edit, edit file
-        - Modifies a file
-
-        ## zsh
-        > aliases: z, shell, terminal, command
-        - Start a new agent which can navigate and use the terminal
-
-        Respond in JSON Format:
-        \`\`\`json
-        {
-            "command": 'project' | 'create file' | 'modify file' | 'zsh',
-        }
-        \`\`\`
-        `),
-        input
-      ),
-    ])
-      .then(asJSON<{ command: Command }>)
-      .then((parsed) => parsed.command));
+    (await blankspace.build(
+      "parse the user input into which action they want to take. Here's what we asked the user. ```(p)roject, (m)odify, (c)reate, (z)sh: ``` Your prompt will only be given inputs that are not an exact string match. Maybe they misspelled a command or described it in other words. Output should be type Command = \"project\" | \"create file\" | \"modify file\" | \"zsh\";").run(
+        tx,
+        [input]
+      ));
 
   switch (command) {
     case "project":

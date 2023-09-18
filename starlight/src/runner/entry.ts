@@ -12,8 +12,10 @@ import { defaultTx } from "@/project/context";
 import { emit } from "@/redis";
 import { safely } from "@/utils";
 import blankspace from "@/blankspace/blankspace";
-import { CodeEditAction } from "@/blankspace/prompts/error-to-action";
-
+import { generatePrompt } from "@/blankspace/main";
+import getInput from "@/tools/user-input";
+import chalk from "chalk";
+import { logger } from "@/utils"
 /*
 
 # Top Level Tasks:
@@ -52,18 +54,36 @@ await emit(tx, "INIT", {});
 console.log(tx.rx.id);
 
 const errorBlob = await safely(executeCommand, "pnpm run tsc");
-const errors = await blankspace
-  .build({
-    tag: "split-errors",
-  })
-  .run(tx, { errorBlob });
 
-const action = await blankspace
-  .build({ tag: "error-to-actions" })
-  .run(tx, { error: errors[0] });
+const errors = await blankspace
+  .build(
+    `Split raw comamnd output into a list of errors. 
+  Keep the filename/linenumber info.
+  return a string[]
+  Show example input/outputs in different programming languages.`
+  )
+  .run(tx, [errorBlob]);
+
+const action = await blankspace.build(
+  `The user will give you an error message and you'll write the action you will take to fix it. 
+  The receiver of your action won't have access to the original error unless you give it to them.
+
+  Your action will have this XML format:
+  {
+    file: string, // the file to open
+    instructions: string // the instructions to the code editing agent
+  }`
+).run(tx, [
+  `# Context
+  ${await loadBuildSystemContext(tx.cx)}
+  `,
+  errors[0]]);
+
+throw "done!";
 
 await take(action);
 
+type CodeEditAction = { file: string; instructions: string };
 async function take(action: CodeEditAction) {
   await codePlanner(
     tx.spawn(),
@@ -71,9 +91,3 @@ async function take(action: CodeEditAction) {
     action.instructions
   );
 }
-
-
-// take({
-//   file: "source-code-utils",
-//   instructions: "add a function reformat(sourceCode: string):string, which uses prettier to format the code",
-// });
