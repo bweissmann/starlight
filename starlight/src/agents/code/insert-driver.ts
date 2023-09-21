@@ -13,10 +13,10 @@ import propose, {
 } from "@/tools/propose";
 import {
   appendLineNumbers,
-  extractFencedSnippets,
   takeAfter,
   takeUntil,
 } from "@/tools/source-code-utils";
+import { extractFencedSnippets } from "@/llm/parser/code-fence";
 
 export type InsertActionSpec = {
   type: "insert-only";

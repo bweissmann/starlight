@@ -2,7 +2,7 @@ import { sequence } from "@/llm/chat";
 import asJSON from "@/llm/parser/json";
 import { g4, system } from "@/llm/utils";
 import { Cx, Tx } from "@/project/context";
-import { extractFencedSnippets } from "@/tools/source-code-utils";
+import { extractFencedSnippets } from "@/llm/parser/code-fence";
 import { logger } from "@/utils";
 import dedent from "dedent";
 

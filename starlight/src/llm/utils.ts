@@ -4,6 +4,7 @@ import { Stream } from "openai/streaming"
 import { isString, toArray } from "../utils.js"
 import { encodingForModel } from 'js-tiktoken'
 import dedent from "dedent"
+
 export type ChatSpec = { model: ModelName, messages: MessageOrStr[], temperature: number }
 export type ModelName = 'gpt-3.5-turbo' | 'gpt-4'
 export type Message = OpenAI.Chat.Completions.ChatCompletionMessage
@@ -35,6 +36,21 @@ export function g35(...messages: MessageOrStr[]): ChatSpec;
 export function g35(...messages: MessageOrStr[] | [MessageOrStr[]]): ChatSpec {
     const flattenedMessages = (Array.isArray(messages[0]) ? messages[0] : messages) as MessageOrStr[]
     return { model: 'gpt-3.5-turbo', messages: toMessageArray(flattenedMessages), temperature: 0 }
+}
+
+export function g35_t06(messages: MessageOrStr[]): ChatSpec;
+export function g35_t06(...messages: MessageOrStr[]): ChatSpec;
+export function g35_t06(
+  ...messages: MessageOrStr[] | [MessageOrStr[]]
+): ChatSpec {
+  const flattenedMessages = (
+    Array.isArray(messages[0]) ? messages[0] : messages
+  ) as MessageOrStr[];
+  return {
+    model: "gpt-3.5-turbo",
+    messages: toMessageArray(flattenedMessages),
+    temperature: 0.6,
+  };
 }
 
 export function toMessageArray(arg: MessageOrStr | MessageOrStr[]): Message[] {

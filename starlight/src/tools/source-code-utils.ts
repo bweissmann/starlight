@@ -1,61 +1,5 @@
-import { chatYNQuestion } from "@/llm/classifier";
-import {
-  ChatContinuationResult,
-  sequence,
-  stringifyChatResult,
-} from "@/llm/chat";
-import asJSON from "@/llm/parser/json";
-import { g35, g4, system, user, assistant } from "@/llm/utils";
-import prettier from "prettier";
 import { Tx } from "@/project/context";
-
-/**
- * A code fenced snippet is a piece of code that is enclosed within triple backticks (```). 
- * It is commonly used in markdown files for code syntax highlighting.
- * 
- * Example:
- * ```javascript
- * const greeting = 'Hello, world!';
- * console.log(greeting);
- * ```
- */
-
-export function extractFencedSnippets(
-  input: string | ChatContinuationResult
-): string[] {
-  return _extractFencedSnippets(stringifyChatResult(input));
-}
-
-function _extractFencedSnippets(input: string): string[] {
-  const lines = input.split("\n");
-  const snippets: string[] = [];
-  let withinSnippet = false;
-  let snippet = "";
-
-  lines.forEach((line) => {
-    if (line.startsWith("```")) {
-      if (withinSnippet) {
-        snippets.push(snippet.trim());
-        snippet = "";
-      }
-      withinSnippet = !withinSnippet;
-    } else if (withinSnippet) {
-      snippet += line + "\n";
-    }
-  });
-
-  return snippets;
-}
-
-export function extractPossibleFencedSnippet(
-  input: string | ChatContinuationResult
-): string {
-  const snippets = extractFencedSnippets(input);
-  if (snippets.length === 0) {
-    return stringifyChatResult(input);
-  }
-  return snippets[0];
-}
+import blankspace from "@/blankspace/blankspace";
 
 export async function insertSnippetIntoFile(
   tx: Tx,
@@ -63,55 +7,29 @@ export async function insertSnippetIntoFile(
   code: string
 ) {
   const contentLined = appendLineNumbers(fileContents);
-  const preamble = [
-    system(`
-        You will be given the original source code of a file and a snippet of code which is an update to that file. 
-        You will identify where in the original file the patch should be applied.
-        `),
-    user("Here is the file"),
-    assistant(fileContents.trim().length === 0 ? "<empty file>" : contentLined),
-    user("Here is the snippet"),
-    assistant(code),
-  ];
 
-  const isEntireFile = await chatYNQuestion(
-    g35(
-      ...preamble,
-      user(`
-        Does the snippet represent a portion of the file? Or does it represent a replacement for the entire file? 
-        Keep in mind that it is extremely unexpected for large portions of a file to be completely deleted, and files ususlly start with imports.
-        Respond true if it is the whole file, false if its a portion.
+  const inputs = {
+    "FILE": fileContents.trim().length === 0 ? "<empty file>" : contentLined,
+    "SNIPPET": code
+  }
 
-        This snippet is a replacement for the whole file (true/false): 
-        `)
-    )
-  );
+  const isEntireFile = await blankspace.build(`
+         Does the code snippet represent a portion of the file? Or does it represent a replacement for the entire file?  
+         Keep in mind that it is extremely unexpected for large portions of a file to be completely deleted, and files ususlly start with imports.
+         Respond true if it is the whole file, false if its a portion.  
+
+         This snippet is a replacement for the whole file (true/false):
+  `).run(inputs)
 
   if (isEntireFile) {
     return code;
   }
-
-  const { startingLine, endingLine } = await sequence(tx, [
-    g4(
-      ...preamble,
-      user(`
-        Decide what portion of the original file shuold be replaced with this patch.
-        Respond with the line number of the first line to be replaced and the line number of the last line to be replaced.
-        
-        Respond in JSON format and say nothing else. Do not write anything outside of the code fence.
-
-        Reponse Format:
-        \`\`\`json
-        {
-            startingLine: <number>,
-            endingLine: <number>
-        }
-        \`\`\`
-        `)
-    ),
-  ])
-    .then(extractPossibleFencedSnippet)
-    .then(asJSON<{ startingLine: number; endingLine: number }>);
+  const { startingLine, endingLine } = await blankspace.build(
+    `You'll be given the original source code file and a snippet of code to update the file (below).
+    Decide what portion of the original file shuold be replaced with this patch. 
+    Respond with the line number of the first line to be replaced and the line number of the last line to be replaced:
+    { startingLine, endingLine }
+    `).run(inputs)
 
   return [
     fileContents
@@ -155,8 +73,4 @@ export function takeAfter(
   const startLineNo = Math.min(lines.length, afterLineNo); // clamp startLineNo to be at most lines.length
   const endLineNo = Math.min(lines.length, startLineNo + n); // clamp endLineNo to be at most lines.length
   return lines.slice(startLineNo, endLineNo).join("\n");
-}
-
-export function reformat(sourceCode: string): Promise<string> {
-  return prettier.format(sourceCode, { parser: "typescript" });
 }

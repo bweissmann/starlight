@@ -104,5 +104,3 @@ Uncaught TypeError: Cannot read property 'map' of undefined at App.js:25
 the interesting part of blankspace to me is the automatic typescript & output parsing inference from the prompt.
 
 I think of the actual "prompt generation from a spec" step as a bit of a black box which can be optimized ad nauseum without affecting the structure of blankspace. my prompts ive been using so far are very naive (see `blankspace/generators/*.ts`)
-
-another direction is generation speed. i'm planning to change the order of my gpt calls so that the output type is ready first and written to disk so the user gets immediate feedback without us needing the full prompt to be ready yet.

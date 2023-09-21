@@ -25,7 +25,7 @@ async function __initializeRedisClient() {
   }
 }
 
-export type EventType = "LLM_CHAT" | "INIT" | "FN";
+export type EventType = "LLM_CHAT" | "INIT" | "FN" | "TIMING";
 
 export async function emit(tx: Tx, type: EventType, fields: object) {
   if (redis === null) {

@@ -9,6 +9,7 @@ const LLMChat = ({
     type: string;
     txId: string;
     txAncestry: string;
+    price: string;
   };
 }) => {
   const message = {
@@ -29,6 +30,8 @@ const LLMChat = ({
           <strong>Result:</strong> {message.result}
           <br />
           <strong>Spec:</strong> {typeof message.spec}
+          <br />
+          <strong>Price:</strong> {message.price}
         </pre>
       </details>
     </div>

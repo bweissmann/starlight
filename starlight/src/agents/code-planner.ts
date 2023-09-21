@@ -4,9 +4,8 @@ import asJSON, { asJSONList } from "@/llm/parser/json";
 import { g4_t02, system_dedent, user, user_dedent } from "@/llm/utils";
 import { Tx } from "@/project/context";
 import {
-  appendLineNumbers,
   extractFencedSnippets,
-} from "@/tools/source-code-utils";
+} from "@/llm/parser/code-fence";
 import { logger } from "@/utils";
 import chalk from "chalk";
 import { insertDriver } from "./code/insert-driver";
@@ -18,6 +17,7 @@ import propose, {
   proposalStepFilepath,
 } from "@/tools/propose";
 import { consoleLogDiff } from "@/tools/diff";
+import { appendLineNumbers } from "@/tools/source-code-utils";
 
 /* 
 Purpose: break down a objective-driven coding task in to a sequence of insert/replace/delete implementation tasks

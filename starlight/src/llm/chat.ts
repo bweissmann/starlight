@@ -104,7 +104,11 @@ export async function chat(
   spec: ChatSpec
 ): Promise<ChatContinuationResult> {
   const result = await chatInternal(spec);
-  await emit(tx, "LLM_CHAT", { spec, result });
+  await emit(tx, "LLM_CHAT", {
+    spec,
+    result,
+    price: estimatePricing({ spec, output: result }).total,
+  });
 
   return {
     message: result,

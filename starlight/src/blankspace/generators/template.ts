@@ -4,11 +4,12 @@ import { chat } from "@/llm/chat";
 import { g4, system } from "@/llm/utils";
 import {
   extractFencedSnippets,
-  extractPossibleFencedSnippet,
-} from "@/tools/source-code-utils";
+  maybeExtractSingleFencedSnippet,
+} from "@/llm/parser/code-fence";
 import asJSON from "@/llm/parser/json";
 import asXML from "@/llm/parser/xml";
 import { asTripleHashtagList } from "@/llm/parser/triple-hashtag";
+import { maybeStripQuotes } from "@/llm/parser/quotes";
 
 const spec = "" as const; // TODO: fill in spec
 
@@ -21,8 +22,13 @@ const forward: Forward<Prompt> = async (tx: Tx, inputs) => {
   return await parse(raw.message);
 };
 
-function parse(raw: string) {} // TODO: implement parse
+async function parse(raw: string): Promise<Prompt["inferred"]["returns"]> {
+  throw "unimplemented";
+} // TODO: implement parse
 
+const hypotheticalResponses = `
+// TODO: optionally add hypothetical responses.
+`;
 // ------------------------------------------
 // ------------------------------------------
 
@@ -31,7 +37,7 @@ export type Prompt = {
   filename: never; // TODO: fill in filename
   inferred: {
     inputs: string[];
-    returns: unknown; // TODO: fill in return;
+    returns: unknown; // TODO: fill in return
   };
 };
 export const emptyinstance: Prompt = {} as Prompt;

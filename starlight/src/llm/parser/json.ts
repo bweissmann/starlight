@@ -1,6 +1,6 @@
 import { ChatContinuationResult, stringifyChatResult } from "../chat";
 
-export default async function asJSON<T>(result: string | ChatContinuationResult) {
+export default function asJSON<T>(result: string | ChatContinuationResult) {
     const raw = stringifyChatResult(result)
 
     try {

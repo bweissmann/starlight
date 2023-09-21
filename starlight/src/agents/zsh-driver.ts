@@ -2,7 +2,7 @@ import { sequence } from "@/llm/chat";
 import { g4 } from "@/llm/utils";
 import read, { fileExists } from "@/fs/read";
 import { treePrettyPrint } from "@/fs/tree";
-import { extractFencedSnippets } from "@/tools/source-code-utils";
+import { extractFencedSnippets } from "@/llm/parser/code-fence";
 import getInput, { askMultiChoice } from "@/tools/user-input";
 import asJSON from "@/llm/parser/json";
 import chalk from "chalk";

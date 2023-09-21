@@ -1,21 +1,12 @@
-import "dotenv/config";
-import "source-map-support/register.js";
+import "@/runner/initializer";
 import { executeCommand } from "@/agents/zsh-driver";
-import { chat } from "@/llm/chat";
-import { g4_t04, system_dedent, user } from "@/llm/utils";
 import { loadBuildSystemContext } from "@/project/loaders";
-import { extractPossibleFencedSnippet } from "@/tools/source-code-utils";
-import asJSON from "@/llm/parser/json";
 import { codePlanner } from "@/agents/code-planner";
 import { getFilepath } from "@/fs/get-filepath";
 import { defaultTx } from "@/project/context";
 import { emit } from "@/redis";
 import { safely } from "@/utils";
 import blankspace from "@/blankspace/blankspace";
-import { generatePrompt } from "@/blankspace/main";
-import getInput from "@/tools/user-input";
-import chalk from "chalk";
-import { logger } from "@/utils"
 /*
 
 # Top Level Tasks:
@@ -57,23 +48,18 @@ const errorBlob = await safely(executeCommand, "pnpm run tsc");
 
 const errors = await blankspace
   .build(
-    `Split raw comamnd output into a list of errors. 
-  Keep the filename/linenumber info.
-  return a string[]
-  Show example input/outputs in different programming languages.`
+    `Take this stdout/stderr output and extract each of the actionable errors so we have them in a list. some of the ouput is errors and some is normal stdout`
   )
   .with(tx)
   .run([errorBlob]);
 
 const action = await blankspace
   .build(
-    `The user will give you an error message and you'll write the action you will take to fix it. 
-  The receiver of your action won't have access to the original error unless you give it to them.
-
-  Your action will have this JSON format:
+    `The user will give you an error message. you'll give instructions to a programmer on how to fix it.
+   heres your output format:
   {
     file: string, // the file to open
-    instructions: string // the instructions to the code editing agent
+    instructions: string // the instructions to the programmer
   }`
   )
   .with(tx)

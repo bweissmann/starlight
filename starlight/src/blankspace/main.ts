@@ -1,17 +1,19 @@
-import { Tx, defaultTx } from "@/project/context";
-import "dotenv/config";
-import "source-map-support/register.js";
-import getOutputFormat from "./generators/get-output-format";
-import getPrompt from "./generators/get-prompt";
+import { Tx } from "@/project/context";
 import read from "@/fs/read";
 import { getFilepath } from "@/fs/get-filepath";
-import { reformat } from "@/tools/source-code-utils";
+import { reformat } from "@/tools/prettier";
 import write from "@/fs/write";
-import { filenameOf } from "@/fs/utils";
-import { makeSafeFromBackticks } from "@/utils";
+import { logger, makeSafeFromBackticks } from "@/utils";
 import tree from "@/fs/tree";
 import path from "path";
-import getInput from "@/tools/user-input";
+import { GENERATE_filenameIdentifier } from "./generators/generate-filename";
+import { GENERATE_TSAnnotation } from "./generators/generate-ts-annotation";
+import GENERATE_promptFirstDraft from "./generators/styles/default/generate-first-draft-prompt";
+import GENERATE_formatInstructions from "./generators/generate-format-instructions";
+import { GENERATE_outputParser } from "./generators/generate-output-parser";
+import { GENERATE_testcases } from "./generators/generate-test-cases";
+import chalk from "chalk";
+import { emit } from "@/redis";
 /* 
 Non-watch mode
 
@@ -32,70 +34,178 @@ async function getNonDuplicatedFilename(tx: Tx, filenameIdentifier: string) {
   if (duplicateFilenames.length === 0) {
     return `${filenameIdentifier}.ts`;
   } else {
-    return `${filenameIdentifier}_v${duplicateFilenames.length + 1}.ts`;
+    const versionNumbers = duplicateFilenames
+      .map((filename) =>
+        path
+          .basename(filename)
+          .replace(`${filenameIdentifier}_v`, "")
+          .replace(".ts", "")
+      )
+      .filter((version) => !isNaN(parseInt(version)))
+      .map((version) => parseInt(version));
+    const highestVersion =
+      versionNumbers.length > 0 ? Math.max(...versionNumbers) : 1;
+    return `${filenameIdentifier}_v${highestVersion + 1}.ts`;
   }
 }
 
-/* filenameIdentifier does NOT have .ts extension */
-export async function generatePrompt(
+async function GENERATE_uniqueFilename(tx: Tx, input: string) {
+  const filenameIdentifier = await GENERATE_filenameIdentifier(tx, input);
+  return await getNonDuplicatedFilename(tx, filenameIdentifier);
+}
+
+async function writeSkeleton(
   tx: Tx,
-  input: string,
-  filenameIdentifier: string
+  spec: string,
+  toFilename: string,
+  tsAnnotation: string
 ) {
-  const taretFilename = await getNonDuplicatedFilename(tx, filenameIdentifier);
-
-  const prompt = await getPrompt(tx, input);
-  const formatter = await getOutputFormat(tx, prompt);
-
   const template = read(await getFilepath(tx, "blankspace/template"));
-  const output_filecontents = await template
+  const skeleton = await template
     .then((s) =>
       s.replace(
         `"" as const; // TODO: fill in spec`,
-        `\`${makeSafeFromBackticks(input)}\` as const;`
+        `\`${makeSafeFromBackticks(spec)}\` as const;`
       )
     )
     .then((s) =>
-      s.replace("// TODO: fill in prompt", makeSafeFromBackticks(prompt))
+      s.replace("never; // TODO: fill in filename", `"${toFilename}";`)
     )
-    .then((s) =>
-      s.replace(
-        "function parse(raw: string) {} // TODO: implement parse",
-        formatter.parser.replace(/ReturnType/g, `Prompt["inferred"]["returns"]`)
-      )
-    )
-    .then((s) =>
-      s.replace("never; // TODO: fill in filename", `"${taretFilename}";`)
-    )
-    .then((s) =>
-      s.replace(
-        "unknown; // TODO: fill in return",
-        formatter.type.split("=")[1].split(";")[0]
-      )
-    )
+    .then((s) => s.replace("unknown; // TODO: fill in return", tsAnnotation))
+    .then(logger())
     .then(reformat);
 
   await write(
-    { filename: taretFilename, directory: "src/blankspace/prompts" },
-    output_filecontents
+    { filename: toFilename, directory: "src/blankspace/prompts" },
+    skeleton
   );
+}
 
-  const generatedpromptsfilepath = await getFilepath(
+async function addToSkeleton(
+  tx: Tx,
+  filename: string,
+  replaceTarget: string | RegExp,
+  replacement: string
+) {
+  const filepath = path.join(
+    tx.projectDirectory,
+    "src",
+    "blankspace",
+    "prompts",
+    filename
+  );
+  const existingContent = await read(filepath);
+  const newContent = existingContent.replace(replaceTarget, replacement);
+  await write({ filepath }, newContent);
+}
+
+async function addPromptToSkeleton(
+  tx: Tx,
+  filename: string,
+  promptFirstDraft: string
+) {
+  await addToSkeleton(
+    tx,
+    filename,
+    "// TODO: fill in prompt",
+    makeSafeFromBackticks(promptFirstDraft)
+  );
+}
+
+async function addParserToSkeleton(tx: Tx, filename: string, parser: string) {
+  await addToSkeleton(
+    tx,
+    filename,
+    /async function parse\(raw: string\)[\s\S]*?\/\/ TODO: implement parse/m,
+    parser.replace(/ReturnType/g, `Prompt["inferred"]["returns"]`)
+  );
+}
+
+async function addImportToGeneratedPrompts(tx: Tx, toFilename: string) {
+  const generatedPromptsFilepath = await getFilepath(
     tx,
     "generated-prompts.ts"
   );
 
-  const filepathLastSegment = taretFilename.replace(".ts", "");
-  const updatedgenprompts = await read(generatedpromptsfilepath)
+  const toFilenameIdentifier = toFilename.replace(".ts", "");
+  const content = await read(generatedPromptsFilepath)
     .then((s) =>
-      s.includes(`await import("./prompts/${filepathLastSegment}.js"),`)
+      noWhitespace(s).includes(
+        noWhitespace(`await import("./prompts/${toFilenameIdentifier}.js"),`)
+      )
         ? s
         : s.replace(
             "// append namespace",
-            `await import("./prompts/${filepathLastSegment}.js"),\n// append namespace`
+            `await import("./prompts/${toFilenameIdentifier}.js"),\n// append namespace`
           )
     )
     .then(reformat);
 
-  await write({ filepath: generatedpromptsfilepath }, updatedgenprompts);
+  await write({ filepath: generatedPromptsFilepath }, content);
+}
+
+export async function generatePrompt(tx: Tx, spec: string) {
+  const timerStart = performance.now();
+  const promiseOfFilename = GENERATE_uniqueFilename(tx, spec);
+  const promiseOfTSAnnotation = GENERATE_TSAnnotation(tx, spec);
+  const promiseOfPromptFirstDraft = GENERATE_promptFirstDraft(tx, spec);
+
+  const [filename, tsAnnotation] = await Promise.all([
+    promiseOfFilename,
+    promiseOfTSAnnotation,
+  ]);
+
+  const promiseOfFormatInstructions = GENERATE_formatInstructions(
+    tx,
+    spec,
+    tsAnnotation
+  );
+
+  await writeSkeleton(tx, spec, filename, tsAnnotation);
+  emit(tx, "TIMING", {
+    name: "skeleton ready",
+    duration: `${(performance.now() - timerStart) / 1000}s`,
+  });
+  await addImportToGeneratedPrompts(tx, filename);
+
+  const [promptFirstDraft, formatInstructions] = await Promise.all([
+    promiseOfPromptFirstDraft,
+    promiseOfFormatInstructions,
+  ]);
+
+  const promptWithFormatInstructions = promptFirstDraft.replace(
+    "<possible further instructions>",
+    formatInstructions
+  );
+
+  await addPromptToSkeleton(tx, filename, promptWithFormatInstructions);
+
+  const hypotheticalResponses = await GENERATE_testcases(
+    tx,
+    promptWithFormatInstructions
+  );
+
+  await addToSkeleton(
+    tx,
+    filename,
+    `// TODO: optionally add hypothetical responses.`,
+    makeSafeFromBackticks(hypotheticalResponses)
+  );
+
+  const parser = await GENERATE_outputParser(
+    tx,
+    promptWithFormatInstructions,
+    hypotheticalResponses,
+    tsAnnotation
+  );
+
+  await addParserToSkeleton(tx, filename, parser);
+  emit(tx, "TIMING", {
+    name: "full prompt ready",
+    duration: `${(performance.now() - timerStart) / 1000}s`,
+  });
+}
+
+function noWhitespace(text: string) {
+  return text.replace(/\s/g, "");
 }

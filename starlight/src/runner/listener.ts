@@ -1,15 +1,13 @@
-import "dotenv/config";
-import "source-map-support/register.js";
-import { redis } from "@/redis";
+import "@/runner/initializer";
+import { emit, redis } from "@/redis";
 import { commandOptions } from "redis";
-import getInput from "@/tools/user-input";
 import { generatePrompt } from "@/blankspace/main";
-import { defaultTx } from "@/project/context";
-import blankspace from "@/blankspace/blankspace";
+import { Tx, defaultTx } from "@/project/context";
 
 async function listenToStream(
+  tx: Tx,
   name: string,
-  callback: (event: any) => Promise<void>
+  callback: (tx: Tx, event: any) => Promise<void>
 ) {
   if (redis === null) {
     console.error("Redis client is not initialized.");
@@ -27,22 +25,25 @@ async function listenToStream(
       }
     );
     if (result) {
+      console.log(result);
       const events = result[0].messages;
       for (const event of events) {
-        await callback(event.message);
+        await callback(tx, event.message);
       }
     }
   }
 }
-async function callback(event: { uuid: string; type: string; input: string }) {
-  if (event.type === "request") {
-    const filenameIdentifier = await blankspace
-      .build(
-        `Given this prompt, come up with a one to four word name for the prompt, all lowercase, dash-separated. I prefer a verb to be the first word if it makes sense.`
-      )
-      .run([event.input]);
-    await generatePrompt(defaultTx(), event.input, filenameIdentifier);
-  }
-}
 
-listenToStream("mirrorball", callback);
+const callback = async (
+  tx: Tx,
+  event: { uuid: string; type: string; input: string }
+) => {
+  if (event.type === "request") {
+    await generatePrompt(tx, event.input);
+  }
+};
+
+const tx = defaultTx();
+await emit(tx, "INIT", {});
+console.log("ready", tx.rx.id);
+listenToStream(tx, "mirrorball", callback);

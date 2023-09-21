@@ -65,12 +65,15 @@ export class BlankspaceActionProvider implements vscode.CodeActionProvider {
 	provideCodeActions(document: vscode.TextDocument, range: vscode.Range, context: vscode.CodeActionContext): vscode.CodeAction[] {
 
 		const diagnostics = context.diagnostics.filter(d => d.code === 2345).map(d => ({ diagnostic: d, call: findCallExpression(document.uri.fsPath, d.range) })).filter((item): item is { call: CallExpression, diagnostic: vscode.Diagnostic } => item.call !== undefined);
+		const gotoprompt = diagnostics.length > 0 ? [new vscode.CodeAction('(unimplemented) Blankspace: Go To Prompt', vscode.CodeActionKind.QuickFix)] : [];
 
-		return diagnostics.map(d => {
+		return [...diagnostics.map(d => {
 			const action = new vscode.CodeAction('Blankspace: Generate prompt', vscode.CodeActionKind.QuickFix);
 			action.command = { command: COMMAND, title: 'Generate Prompt', arguments: [d.call] };
 			return action;
-		});
+		}),
+			// ...gotoprompt
+		];
 	}
 }
 

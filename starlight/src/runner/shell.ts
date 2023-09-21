@@ -1,5 +1,4 @@
-import "dotenv/config";
-import "source-map-support/register.js";
+import "@/runner/initializer";
 import { sequence } from "@/llm/chat";
 import { g35, system } from "@/llm/utils";
 import getInput from "@/tools/user-input";
@@ -32,11 +31,14 @@ async function repl(tx: Tx): Promise<void> {
     commandExactMatch ||
     (await blankspace
       .build(
-        "parse the user input into which action they want to take. Here's what we asked the user. ```(p)roject, (m)odify, (c)reate, (z)sh: ``` Your prompt will only be given inputs that are not an exact string match. Maybe they misspelled a command or described it in other words. Output should be type Command = \"project\" | \"create file\" | \"modify file\" | \"zsh\";")
+        `parse the user input into which action they want to take. 
+        Here\'s what we asked for user input: \`\`\`(p)roject, (m)odify, (c)reate, (z)sh: \`\`\` 
+        Your prompt will only be given inputs that are not an exact string match.
+        Maybe they misspelled a command or described it in other words.
+        The output should be type Command = "project" | "create file" | "modify file" | "zsh";`
+      )
       .with(tx)
-      .run(
-        [input],
-      ));
+      .run([input]));
 
   switch (command) {
     case "project":

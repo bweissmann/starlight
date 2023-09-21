@@ -39,6 +39,11 @@ function Listener({
         Disconnect
       </button>
       {readyState === 3 && "Connection is Closed. Check console"}
+      <p>Cumulative Price: {
+        logs
+          .filter(log => "price" in log.message && !Number.isNaN(parseFloat(log.message.price)))
+          .map(log => parseFloat(log.message.price))
+          .reduce((acc, cur) => acc + cur, 0.0)}</p>
       {logs.map((log, index) => (
         <details key={index} open={index === logs.length - 1}>
           <summary>

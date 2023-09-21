@@ -5,8 +5,6 @@ import { asTripleHashtagList } from "@/llm/parser/triple-hashtag";
 import { g4, assistant, system, user } from "@/llm/utils";
 import {
   appendLineNumbers,
-  extractFencedSnippets,
-  extractPossibleFencedSnippet,
 } from "@/tools/source-code-utils";
 import { consoleLogDiff } from "@/tools/diff";
 import propose, {
@@ -19,6 +17,7 @@ import chalk from "chalk";
 import { codeDriver as prompts } from "./prompt.js";
 import dedent from "dedent";
 import { Tx } from "@/project/context.js";
+import { extractFencedSnippets, maybeExtractSingleFencedSnippet } from "@/llm/parser/code-fence.js";
 
 type CopyPasteCommand = {
   command: "copy/paste";
@@ -257,7 +256,7 @@ ${currentFileContentsAroundChange}
 `
     ),
   ])
-    .then(extractPossibleFencedSnippet)
+    .then(maybeExtractSingleFencedSnippet)
     .then(asJSON<{ "start-line-number": number; "end-line-number": number }>)
     .then((result) => ({
       start: result["start-line-number"],

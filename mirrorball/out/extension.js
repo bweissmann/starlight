@@ -51,11 +51,14 @@ const COMMAND = 'mirrorball.generate';
 class BlankspaceActionProvider {
     provideCodeActions(document, range, context) {
         const diagnostics = context.diagnostics.filter(d => d.code === 2345).map(d => ({ diagnostic: d, call: findCallExpression(document.uri.fsPath, d.range) })).filter((item) => item.call !== undefined);
-        return diagnostics.map(d => {
-            const action = new vscode.CodeAction('Blankspace: Generate prompt', vscode.CodeActionKind.QuickFix);
-            action.command = { command: COMMAND, title: 'Generate Prompt', arguments: [d.call] };
-            return action;
-        });
+        const gotoprompt = diagnostics.length > 0 ? [new vscode.CodeAction('(unimplemented) Blankspace: Go To Prompt', vscode.CodeActionKind.QuickFix)] : [];
+        return [...diagnostics.map(d => {
+                const action = new vscode.CodeAction('Blankspace: Generate prompt', vscode.CodeActionKind.QuickFix);
+                action.command = { command: COMMAND, title: 'Generate Prompt', arguments: [d.call] };
+                return action;
+            }),
+            // ...gotoprompt
+        ];
     }
 }
 exports.BlankspaceActionProvider = BlankspaceActionProvider;
