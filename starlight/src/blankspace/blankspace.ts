@@ -51,12 +51,15 @@ export class space<F, S extends SpecOf<GeneratedPrompts>> {
     inputs: Record<string, string>
   ): Promise<SpecToInferred[S]["returns"]>;
   async run(inputs: string[]): Promise<SpecToInferred[S]["returns"]>;
+  async run(): Promise<SpecToInferred[S]["returns"]>;
   async run(
-    inputs: string[] | Record<string, string>
+    inputs?: string[] | Record<string, string>
   ): Promise<SpecToInferred[S]["returns"]> {
-    const messages: string[] = Array.isArray(inputs)
-      ? inputs
-      : Object.entries(inputs).map(([key, value]) => `${key}:\n${value}`);
+
+    const messages: string[] = inputs === undefined ? [] :
+      Array.isArray(inputs)
+        ? inputs
+        : Object.entries(inputs).map(([key, value]) => `${key}:\n${value}`);
     return this.forward(this.tx ?? defaultTx(), messages);
   }
 }

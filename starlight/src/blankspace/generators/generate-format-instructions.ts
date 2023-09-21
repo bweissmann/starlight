@@ -23,7 +23,7 @@ This is very useful because it allows GPT-4 to write whatever it wants before an
 For instance, if we want GPT-4 to give us a random color, we should ask for the answer within a code fence, and it might respond:
 "
 Sure, here's a random color
-\`\`\`color
+\`\`\`plaintext
 blue
 \`\`\`
 Let me know if I can help with anything else
@@ -60,9 +60,12 @@ For instance, if the task is to come up with a name, eye color, height, and age 
 \`\`\`
 "
 
-## (4) NEVER write source code within JSON
+## (3.1) NEVER write source code within JSON
 DO NOT write code as a JSON field. GPT-4 will not correctly use escape characters, and the JSON will end up malformed.
 Any code that GPT-4 writes, regardless of programming language, should be inside a code-fenced block marked with the corresponding programming language.
+
+## (3.2) Rules for Using JSON
+If you choose a JSON output, include in your reponse the phrase "Make sure to to escape newline and quote character within JSON content".
 
 ## (5) Lists: use multiple code-fenced blocks, one code-block per list item.
 The preferred way to write lists is with each item in its own code fenced block.

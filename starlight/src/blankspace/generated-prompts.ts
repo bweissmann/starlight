@@ -20,6 +20,18 @@ const namespaces = [
   await import("./prompts/code-patch-locator_v4.js"),
   await import("./prompts/file-replacement-check_v10.js"),
   await import("./prompts/file-replacement-checker_v2.js"),
+  await import("./prompts/fix-error-instructions_v3.js"),
+  await import("./prompts/fix-error-instructions_v4.js"),
+  await import("./prompts/fix-error-instructions_v5.js"),
+  await import("./prompts/fix-error-instructions_v6.js"),
+  await import("./prompts/fix-error-instructions_v7.js"),
+  await import("./prompts/generate-user-profile.js"),
+  await import("./prompts/generate-user-profile_v2.js"),
+  await import("./prompts/generate-user-profile_v3.js"),
+  await import("./prompts/generate-user-profile_v4.js"),
+  await import("./prompts/extract-email-details.js"),
+  await import("./prompts/determine-replacement-range.js"),
+  await import("./prompts/select-replace-lines.js"),
   // append namespace
 ];
 
