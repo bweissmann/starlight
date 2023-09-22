@@ -1,5 +1,6 @@
 import type {
   Forward,
+  ForwardOfInferred,
   PromptOf,
   PromptOfSpec,
   SpecOf,
@@ -14,7 +15,7 @@ export default class blankspace {
   static build<F extends SpecToFilename[S], S extends SpecOf<GeneratedPrompts>>(
     spec: S
   ) {
-    return new space<F, S>(spec, this.forwardOfSpec(spec));
+    return new space<F, SpecToInferred[S]>(this.forwardOfSpec(spec) as ForwardOfInferred<SpecToInferred[S]>);
   }
 
   static forwardOfSpec<
@@ -31,30 +32,28 @@ export default class blankspace {
   }
 }
 
-export class space<F, S extends SpecOf<GeneratedPrompts>> {
-  private spec: S;
-  private forward: Forward<PromptOf<S>>;
+export class space<F, Inferred extends { returns: any }> {
+  private forward: ForwardOfInferred<Inferred>;
   private tx?: Tx;
 
-  constructor(spec: S, forward: Forward<PromptOf<S>>, tx?: Tx) {
-    this.spec = spec;
+  constructor(forward: ForwardOfInferred<Inferred>, tx?: Tx) {
     this.tx = tx;
     this.forward = forward;
   }
 
   with(tx: Tx) {
-    return new space<F, S>(this.spec, this.forward, tx);
+    return new space<F, Inferred>(this.forward, tx);
   }
 
   // todo: replace back with SpecToInferred[S]["inputs"]
   async run(
     inputs: Record<string, string>
-  ): Promise<SpecToInferred[S]["returns"]>;
-  async run(inputs: string[]): Promise<SpecToInferred[S]["returns"]>;
-  async run(): Promise<SpecToInferred[S]["returns"]>;
+  ): Promise<Inferred["returns"]>;
+  async run(inputs: string[]): Promise<Inferred["returns"]>;
+  async run(): Promise<Inferred["returns"]>;
   async run(
     inputs?: string[] | Record<string, string>
-  ): Promise<SpecToInferred[S]["returns"]> {
+  ): Promise<Inferred["returns"]> {
 
     const messages: string[] = inputs === undefined ? [] :
       Array.isArray(inputs)

@@ -77,7 +77,6 @@ export type Prompt = {
   spec: typeof spec;
   filename: "select-replace-lines.ts";
   inferred: {
-    inputs: string[];
     returns: {
       startingLine: number;
       endingLine: number;

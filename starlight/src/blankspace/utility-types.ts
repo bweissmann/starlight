@@ -17,8 +17,8 @@ type SpecToMarker<S> = S extends { intro: string; examples: string[] }
 
 export type PromptOfSpec<S, P> = P extends { spec: infer IterSpec }
   ? SpecToMarker<S> extends SpecToMarker<IterSpec>
-    ? P
-    : never
+  ? P
+  : never
   : never;
 
 export type PromptOf<S> = PromptOfSpec<S, GeneratedPrompts>;
@@ -29,13 +29,19 @@ export type ImplOf<P> = {
   forward: InferForward<P>;
 };
 
-type InferForward<P> = P extends { inferred: { inputs: any; returns: any } }
+type InferForward<P> = P extends { inferred: { returns: any } }
   ? Forward<P>
   : never;
 
-export type Forward<P extends { inferred: { inputs: any; returns: any } }> = (
+export type ForwardOfInferred<Inferred> = Inferred extends { returns: any } ? (
   tx: Tx,
-  inputs: P["inferred"]["inputs"]
+  inputs: string[]
+) => Promise<Inferred["returns"]> : never;
+
+
+export type Forward<P extends { inferred: { returns: any } }> = (
+  tx: Tx,
+  inputs: string[]
 ) => Promise<P["inferred"]["returns"]>;
 
 type SpecToInferredGeneric<P extends { spec: string; inferred: any }> = {

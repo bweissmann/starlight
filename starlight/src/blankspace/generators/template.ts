@@ -36,7 +36,6 @@ export type Prompt = {
   spec: typeof spec;
   filename: never; // TODO: fill in filename
   inferred: {
-    inputs: string[];
     returns: unknown; // TODO: fill in return
   };
 };
