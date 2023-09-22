@@ -1,3 +1,4 @@
+import { emit } from "@/redis";
 import { v4 as uuidv4 } from "uuid";
 
 /* The working context for an agent */
@@ -84,7 +85,9 @@ export class Tx {
 }
 
 export function defaultTx(projectDirectory?: string) {
-  return new Rx(defaultCx(projectDirectory)).spawn();
+  const tx = new Rx(defaultCx(projectDirectory)).spawn();
+  emit(tx, 'INIT', {});
+  return tx
 }
 
 export function defaultCx(projectDirectory?: string): Cx {

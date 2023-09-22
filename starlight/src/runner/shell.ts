@@ -62,7 +62,4 @@ async function repl(tx: Tx): Promise<void> {
 }
 
 const tx = defaultTx(process.argv[2]);
-await emit(tx, "INIT", {});
-console.log(tx.rx.id);
-
 repl(tx);

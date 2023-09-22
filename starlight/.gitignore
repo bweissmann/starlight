@@ -5,3 +5,5 @@ database.db
 **/.proposal/**/*
 **/.DS_Store
 **/.starlight/local
+
+**/blankspace/built/

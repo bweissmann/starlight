@@ -7,7 +7,7 @@ import type {
   SpecToFilename,
   SpecToInferred,
 } from "./utility-types";
-import { impls, type GeneratedPrompts } from "./generated-prompts";
+import { impls, type GeneratedPrompts } from "./built/built-prompts";
 import { Tx, defaultTx } from "@/project/context";
 import isEqual from "lodash.isequal";
 

@@ -41,9 +41,6 @@ And if the code insertion is good then we should be able to test it even with ba
 // await gatherContext(defaultCx(), args.trim().length > 0 ? args : `Write search`)
 
 const tx = defaultTx(process.argv[2]);
-await emit(tx, "INIT", {});
-console.log(tx.rx.id);
-
 const errorBlob = await safely(executeCommand, "pnpm run tsc");
 
 const errors = await blankspace
@@ -56,7 +53,7 @@ const errors = await blankspace
 const action = await blankspace
   .build(
     `The user will give you an error message. you'll give instructions to a programmer on how to fix it.
-   heres your output format:
+   output this format:
   {
     file: string, // the file to open
     instructions: string // the instructions to the programmer

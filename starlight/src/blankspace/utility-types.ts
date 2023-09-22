@@ -1,5 +1,5 @@
 import { Tx } from "@/project/context";
-import { GeneratedPrompts } from "./generated-prompts";
+import { GeneratedPrompts } from "./built/built-prompts";
 
 type Join<T extends string[]> = T extends []
   ? ""
