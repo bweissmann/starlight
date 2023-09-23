@@ -52,28 +52,35 @@ function App() {
                 padding: "6px 16px",
               }}
             >
-              <p>{epochToReadableDate(timestamp)}</p>
-              <p
-                style={{
-                  fontSize: "small",
-                  color: "grey",
-                  fontWeight: "600",
-                }}
-              >
-                {id}
-              </p>
-              {!connected && (
-                <button
-                  onClick={() =>
-                    setRecents({
-                      ...recents,
-                      [id]: { ...recents[id], connected: !connected },
-                    })
-                  }
+              <div style={{
+                display: "flex",
+                alignItems: "center"
+              }}>
+                {!connected && (
+                  <button
+                    onClick={() =>
+                      setRecents({
+                        ...recents,
+                        [id]: { ...recents[id], connected: !connected },
+                      })
+                    }
+                  >
+                    Connect
+                  </button>
+                )}
+                <p style={{ marginLeft: '6px' }}>{epochToReadableDate(timestamp)}</p>
+                <p
+                  style={{
+                    margin: '6px',
+                    fontSize: "small",
+                    color: "grey",
+                    fontWeight: "600",
+                  }}
                 >
-                  Connect
-                </button>
-              )}
+                  {id}
+                </p>
+              </div>
+
               {connected && (
                 <Listener
                   stream={id}
@@ -95,7 +102,8 @@ function App() {
 
 const epochToReadableDate = (milliseconds: string) => {
   const date = new Date(parseInt(milliseconds));
-  return date.toLocaleString();
+  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })
+    + ', ' + date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })
 };
 
 export default App;

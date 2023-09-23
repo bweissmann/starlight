@@ -4,5 +4,6 @@
         "build": true,
         "**/dist": true,
         "**/node_modules": true,
+        "pnpm-lock.yaml": true
     }
 }

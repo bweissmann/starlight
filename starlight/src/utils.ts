@@ -21,10 +21,11 @@ function sort<T extends object | any[]>(x: T): T {
   return x;
 }
 
-export async function safely<R, A extends any[]>(
-  fn: (...args: A) => R,
-  ...args: A
-) {
+// Narrow scope of safely to only string operations
+export async function safely<Args extends any[]>(
+  fn: (...args: Args) => Promise<string>,
+  ...args: Args
+): Promise<string> {
   try {
     return await fn(...args);
   } catch (e: any) {
