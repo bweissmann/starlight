@@ -1,15 +1,11 @@
 import "@/runner/initializer";
-import { sequence } from "@/llm/chat";
-import { g35, system } from "@/llm/utils";
 import getInput from "@/tools/user-input";
-import asJSON from "@/llm/parser/json";
 import { modifyFile } from "./utils";
 import chalk from "chalk";
 import path from "path";
 import process from "process";
 import { zshDriver } from "@/agents/zsh-driver";
 import { Tx, defaultTx } from "@/project/context";
-import { emit } from "@/redis";
 import blankspace from "@/blankspace/blankspace";
 type Command = "project" | "create file" | "modify file" | "zsh";
 

@@ -1,5 +1,5 @@
 import { Tx } from "@/project/context";
-import { Forward, ImplOf } from "../utility-types";
+import { Forward, ImplOf } from "@/blankspace/utility-types";
 import { chat } from "@/llm/chat";
 import { g4, system } from "@/llm/utils";
 import {

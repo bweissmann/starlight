@@ -8,7 +8,7 @@ import tree from "@/fs/tree";
 import path from "path";
 import { GENERATE_filenameIdentifier } from "./generators/generate-filename";
 import { GENERATE_TSAnnotation } from "./generators/generate-ts-annotation";
-import GENERATE_promptFirstDraft from "./generators/styles/default/generate-first-draft-prompt";
+import GENERATE_promptFirstDraft from "./generators/styles/email/generate-first-draft-prompt";
 import GENERATE_formatInstructions from "./generators/generate-format-instructions";
 import { GENERATE_outputParser } from "./generators/generate-output-parser";
 import { GENERATE_testcases } from "./generators/generate-test-cases";
@@ -22,9 +22,11 @@ Non-watch mode
     - Each file will have an export const spec as const (to narrow it) with the exact text of the identifier, we can filter on these
 */
 
+const PROMPTS_FILEPATH = ["src", "blankspace", "built", "prompts"];
+
 async function getNonDuplicatedFilename(tx: Tx, filenameIdentifier: string) {
   const duplicateFilenames = await tree(
-    path.join(tx.projectDirectory, "src", "blankspace", "prompts")
+    path.join(tx.projectDirectory, ...PROMPTS_FILEPATH)
   )
     .then((files) => files.map((file) => path.basename(file)))
     .then((files) =>
@@ -60,7 +62,7 @@ async function writeSkeleton(
   toFilename: string,
   tsAnnotation: string
 ) {
-  const template = read(await getFilepath(tx, "blankspace/template"));
+  const template = read(await getFilepath(tx, "blankspace/template.ts"));
   const skeleton = await template
     .then((s) =>
       s.replace(
@@ -76,7 +78,7 @@ async function writeSkeleton(
     .then(reformat);
 
   await write(
-    { filename: toFilename, directory: "src/blankspace/prompts" },
+    { filename: toFilename, directory: path.join(tx.projectDirectory, ...PROMPTS_FILEPATH) },
     skeleton
   );
 }
@@ -89,9 +91,7 @@ async function addToSkeleton(
 ) {
   const filepath = path.join(
     tx.projectDirectory,
-    "src",
-    "blankspace",
-    "prompts",
+    ...PROMPTS_FILEPATH,
     filename
   );
   const existingContent = await read(filepath);
@@ -124,7 +124,7 @@ async function addParserToSkeleton(tx: Tx, filename: string, parser: string) {
 async function addImportToGeneratedPrompts(tx: Tx, toFilename: string) {
   const generatedPromptsFilepath = await getFilepath(
     tx,
-    "generated-prompts.ts"
+    "blankspace/built-prompts.ts"
   );
 
   const toFilenameIdentifier = toFilename.replace(".ts", "");
@@ -135,9 +135,9 @@ async function addImportToGeneratedPrompts(tx: Tx, toFilename: string) {
       )
         ? s
         : s.replace(
-            "// append namespace",
-            `await import("./prompts/${toFilenameIdentifier}.js"),\n// append namespace`
-          )
+          "// append namespace",
+          `await import("./prompts/${toFilenameIdentifier}.js"),\n// append namespace`
+        )
     )
     .then(reformat);
 
