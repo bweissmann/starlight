@@ -3,7 +3,7 @@ import { executeCommand } from "@/agents/zsh-driver";
 import { loadBuildSystemContext } from "@/project/loaders";
 import { codePlanner } from "@/agents/code-planner";
 import { getFilepath } from "@/fs/get-filepath";
-import { defaultTx } from "@/project/context";
+import { defaultCx, defaultTx } from "@/project/context";
 import { emit } from "@/redis";
 import { safely } from "@/utils";
 import blankspace from "@/blankspace/blankspace";
@@ -41,5 +41,12 @@ And if the code insertion is good then we should be able to test it even with ba
 // const args = process.argv.slice(2).join(' ');
 // await gatherContext(defaultCx(), args.trim().length > 0 ? args : `Write search`)
 
-const tx = defaultTx(process.argv[2]);
-await TASk_fixErrors(tx);
+const cx = defaultCx(process.argv[2] || "/Users/bweissmann/starlight/midnight");
+try {
+  await TASk_fixErrors(cx);
+} catch (e: unknown) {
+  console.error("Error:", e);
+  if (e instanceof Error) {
+    console.error(e.stack);
+  }
+}

@@ -1,4 +1,3 @@
-import { Cx } from "@/project/context";
 export function subsequenceMatch(query: string, candidate: string): boolean {
   let j = 0; // Index for query
   for (let i = 0; i < candidate.length && j < query.length; i++) {

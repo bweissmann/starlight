@@ -1,23 +1,23 @@
-import { sequence } from "@/llm/chat";
-import { g4 } from "@/llm/utils";
 import read, { fileExists } from "@/fs/read";
+import { filepath_within_subdirectory } from "@/fs/subdirectory";
 import { treePrettyPrint } from "@/fs/tree";
+import { sequence } from "@/llm/chat";
 import { extractFencedSnippets } from "@/llm/parser/code-fence";
-import getInput, { askMultiChoice } from "@/tools/user-input";
 import asJSON from "@/llm/parser/json";
-import chalk from "chalk";
-import { zshDriver as prompts } from "./prompt";
+import { g4 } from "@/llm/utils";
+import { Cx, Tx, defaultCx } from "@/project/context";
 import propose, {
   cleanUpProposalDirectory,
   proposalFilepath,
 } from "@/tools/propose";
+import getInput, { askMultiChoice } from "@/tools/user-input";
+import { indent } from "@/utils";
+import chalk from "chalk";
 import { spawn } from "child_process";
 import dedent from "dedent";
 import fs from "fs/promises";
-import { filepath_within_subdirectory } from "@/fs/subdirectory";
 import path from "path";
-import { Tx } from "@/project/context";
-import { indent } from "@/utils";
+import { zshDriver as prompts } from "./prompt";
 
 type CommandInput = {
   command: "tree" | "cat" | "modify" | "quit" | "propose";
@@ -121,7 +121,10 @@ async function dangerouslyExecuteTerminalCommands(filepath: string) {
 
   let output = "";
   for (let i = 0; i < commands.length; i++) {
-    const result = await executeCommand(commands[i]);
+    const result = await executeCommand(
+      defaultCx().projectDirectory,
+      commands[i]
+    );
     output += result;
     if (i < commands.length - 1) {
       await pause(`Executed ${i + 1}/${commands.length}`);
@@ -152,11 +155,14 @@ async function dangerouslyExecuteTerminalCommands(filepath: string) {
 
   return output;
 }
-export async function executeCommand(command: string): Promise<string> {
+export async function executeCommand(
+  cwd: string,
+  command: string
+): Promise<string> {
   return new Promise((resolve, reject) => {
     const [cmd, ...args] = command.split(" ");
 
-    const child = spawn(cmd, args);
+    const child = spawn(cmd, args, { cwd });
 
     let stdout = "";
     let stderr = "";

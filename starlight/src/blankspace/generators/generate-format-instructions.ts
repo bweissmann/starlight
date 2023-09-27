@@ -2,7 +2,7 @@ import { chat } from "@/llm/chat";
 import { g4, system } from "@/llm/utils";
 import { Tx } from "@/project/context";
 
-const prompt = `
+export const prompt = `
 # Introduction
 
 The user will give you a task they want accomplished by GPT-4, as well as the desired Typescript format for the output after it is parsed.
