@@ -1,4 +1,4 @@
-# Graph
+# starlight/graph
 
 Experiment with custom execution graph construction
 
