@@ -1,42 +1,40 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Listener from "./Listener";
+import useWebSocket from "react-use-websocket";
 
 function App() {
   const [recents, setRecents] = useState<
     Record<string, { connected: boolean; timestamp: string }>
   >({});
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchRecents();
-    }, 1000);
-
-    // Run fetchRecents once on load
-    fetchRecents();
-
-    // Clear interval on component unmount
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchRecents = async () => {
-    try {
-      const response = await fetch("http://localhost:8080/recents");
-      const data: { id: string; message: { id: string } }[] = await response.json();
+  const { sendJsonMessage } = useWebSocket("ws://127.0.0.1:8080", {
+    onOpen: () => {
+      sendJsonMessage({
+        command: "sub",
+        stream: "initializations",
+      });
+    },
+    onMessage: (event) => {
+      const data: { id: string; message: { id: string } }[] = JSON.parse(
+        event.data
+      );
+      data.reverse();
       setRecents((current) => {
         const newData = Object.fromEntries(
-          data.map((entry) => {
+          data.map((entry, index) => {
             return [
               entry.message.id,
-              { connected: false, timestamp: entry.id.split("-")[0] },
+              { 
+                connected: index === 0 ? true : false, 
+                timestamp: entry.id.split("-")[0] 
+              },
             ] as [string, { connected: boolean; timestamp: string }];
           })
         );
         return { ...newData, ...current };
       });
-    } catch (error) {
-      console.error(error);
-    }
-  };
+    },
+  });
 
   return (
     <div className="App">
@@ -52,10 +50,12 @@ function App() {
                 padding: "6px 16px",
               }}
             >
-              <div style={{
-                display: "flex",
-                alignItems: "center"
-              }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
                 {!connected && (
                   <button
                     onClick={() =>
@@ -68,10 +68,12 @@ function App() {
                     Connect
                   </button>
                 )}
-                <p style={{ marginLeft: '6px' }}>{epochToReadableDate(timestamp)}</p>
+                <p style={{ marginLeft: "6px" }}>
+                  {epochToReadableDate(timestamp)}
+                </p>
                 <p
                   style={{
-                    margin: '6px',
+                    margin: "6px",
                     fontSize: "small",
                     color: "grey",
                     fontWeight: "600",
@@ -102,8 +104,20 @@ function App() {
 
 const epochToReadableDate = (milliseconds: string) => {
   const date = new Date(parseInt(milliseconds));
-  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })
-    + ', ' + date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })
+  return (
+    date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    }) +
+    ", " +
+    date.toLocaleDateString("en-US", {
+      month: "numeric",
+      day: "numeric",
+      year: "numeric",
+    })
+  );
 };
 
 export default App;

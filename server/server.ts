@@ -48,6 +48,7 @@ async function listenToStream(stream: string) {
 
   while (true) {
     try {
+      console.log("pre-loop of xread", stream);
       const response = await streamController[stream].client.xRead(
         redis.commandOptions({
           signal: streamController[stream].abortController.signal,
@@ -108,16 +109,23 @@ async function addListenerForStream(stream: string, ws: WebSocket) {
       "total listeners",
       streamController[stream].listeners.length
     );
-    sendHistoricalDataToWs(stream, ws);
-  } else {
-    streamController[stream] = {
-      listeners: [ws],
-      abortController: new AbortController(),
-      client: await openBlockingClient(),
-    };
-    listenToStream(stream);
     await sendHistoricalDataToWs(stream, ws);
-    console.log("started listing to stream", stream, "with one listener");
+  } else {
+    try {
+      const blockingClient = await openBlockingClient();
+      streamController[stream] = {
+        listeners: [ws],
+        abortController: new AbortController(),
+        client: blockingClient,
+      };
+      // try to stop this weird bug
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      listenToStream(stream);
+      await sendHistoricalDataToWs(stream, ws);
+      console.log("started listing to stream", stream, "with one listener");
+    } catch (e) {
+      console.error("COULD NOT OPEN CLIENT, TRY AGAIN", e);
+    }
   }
 }
 
@@ -135,6 +143,7 @@ async function removeListenerFromStream(stream: string, ws: WebSocket) {
 
 wss.on("connection", (ws) => {
   ws.on("message", (rawMessage) => {
+    console.log("got message", rawMessage.toString());
     const message = JSON.parse(rawMessage.toString());
     const { command, stream } = message;
     if (command === "sub") {
@@ -163,6 +172,7 @@ function removeListenerFromAllStreams(ws: WebSocket) {
   });
 }
 
+// DEPRECATED
 app.get("/recents", async (req, res) => {
   try {
     let n = 10; // default

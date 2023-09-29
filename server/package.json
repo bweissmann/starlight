@@ -14,7 +14,7 @@
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "http": "0.0.1-security",
-    "redis": "^4.6.8",
+    "redis": "4.6.0",
     "ws": "^8.14.1"
   },
   "devDependencies": {

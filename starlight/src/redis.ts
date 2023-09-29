@@ -11,7 +11,9 @@ async function __initializeRedisClient() {
     redisClient.on("error", (err) => {
       if (err.code === "ECONNREFUSED") {
         redisClient.quit();
-        throw new Error("Connection refused by Redis server. Events will not be streamed");
+        throw new Error(
+          "Connection refused by Redis server. Events will not be streamed"
+        );
       }
       console.error("Redis Client Error", err, err.code);
     });
@@ -25,16 +27,11 @@ async function __initializeRedisClient() {
   }
 }
 
-export type EventType = "LLM_CHAT" | "INIT" | "FN" | "TIMING";
+export type EventType = "LLM_CHAT" | "INIT" | "FN" | "TIMING" | "TEXT_CHUNK";
 
 export async function emit(tx: Tx, type: EventType, fields: object) {
   if (redis === null) {
     return;
-  }
-  if (type === "INIT") {
-    await redis.xAdd("initializations", "*", {
-      id: tx.rx.id,
-    });
   }
 
   const fieldsAsJson = Object.fromEntries(
@@ -46,4 +43,10 @@ export async function emit(tx: Tx, type: EventType, fields: object) {
     txId: tx.id,
     txAncestry: JSON.stringify(tx.ancestryIds),
   });
+
+  if (type === "INIT") {
+    await redis.xAdd("initializations", "*", {
+      id: tx.rx.id,
+    });
+  }
 }
