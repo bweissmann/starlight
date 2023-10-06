@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
-import useWebSocket from "react-use-websocket";
-import TextRenderer, { MAX_LINE_HEIGHT, keyFor } from "./Chunk";
+import { useMemo } from "react";
+import TextRenderer, { MAX_LINE_HEIGHT, keyFor } from "./StreamChunk";
+import { useStream } from "./StreamReciever";
 import LLMChat from "./nodes/LLMChat";
 
 function Listener({
@@ -10,25 +10,12 @@ function Listener({
   stream: string;
   onDisconnect: () => void;
 }) {
-  const [logs, setLogs] = useState<Record<string, any>[]>([]);
-  const { sendJsonMessage, readyState } = useWebSocket("ws://127.0.0.1:8080", {
-    onOpen: () => {
-      sendJsonMessage({
-        command: "sub",
-        stream,
-      });
-    },
-    onMessage(event) {
-      console.log(event.data);
-      setLogs((value) => [
-        ...value,
-        ...JSON.parse(event.data).flatMap((entry: any) => entry),
-      ]);
-    },
-    onClose: () => {
-      console.log("Connection closed");
-    },
-  });
+  const { data, readyState, unsub } = useStream<Record<string, any>>(
+    2800,
+    stream
+  );
+
+  const logs = data;
 
   const chunkSections = useMemo(() => {
     return logs.reduce<string[][]>(
@@ -55,6 +42,16 @@ function Listener({
     );
   }, [logs]);
 
+  const keyToIndexInSectionMap = useMemo(() => {
+    const map = new Map<string, number>();
+    chunkSections.forEach((section) => {
+      section.forEach((key, indexInSection) => {
+        map.set(key, indexInSection);
+      });
+    });
+    return map;
+  }, [chunkSections]);
+
   const keyToSectionMap = useMemo(() => {
     const map = new Map<string, number>();
     chunkSections.forEach((section, index) => {
@@ -65,31 +62,27 @@ function Listener({
     return map;
   }, [chunkSections]);
 
+  const cumulativePrice = useMemo(() => {
+    return logs
+      .filter(
+        (log) =>
+          "price" in log.message && !Number.isNaN(parseFloat(log.message.price))
+      )
+      .map((log) => parseFloat(log.message.price))
+      .reduce((acc, cur) => acc + cur, 0.0);
+  }, [logs]);
   return (
     <div style={{ marginBottom: "160px" }}>
       <button
         onClick={() => {
-          sendJsonMessage({
-            command: "unsub",
-            stream,
-          });
+          unsub();
           onDisconnect();
         }}
       >
         Disconnect
       </button>
       {readyState === 3 && "Connection is Closed. Check console"}
-      <p>
-        Cumulative Price:{" "}
-        {logs
-          .filter(
-            (log) =>
-              "price" in log.message &&
-              !Number.isNaN(parseFloat(log.message.price))
-          )
-          .map((log) => parseFloat(log.message.price))
-          .reduce((acc, cur) => acc + cur, 0.0)}
-      </p>
+      <p>Cumulative Price: ${cumulativePrice.toFixed(3)}</p>
       <div
         style={{ display: "flex", flexWrap: "wrap", transition: "height 0.2s" }}
       >
@@ -100,13 +93,18 @@ function Listener({
                 <TextRenderer
                   nSections={chunkSections.length}
                   keyToSectionMap={keyToSectionMap}
+                  keyToIndexInSectionMap={keyToIndexInSectionMap}
                   key={index}
                   log={log}
                   indexFromEnd={logs.length - index - 1}
                 />
               );
             case "LLM_CHAT":
-              return <LLMChat key={index} messageRaw={log.message} />;
+              return (
+                <div style={{ width: "100%" }}>
+                  <LLMChat key={index} messageRaw={log.message} />
+                </div>
+              );
             case "INIT":
               return (
                 <div

@@ -75,7 +75,9 @@ async function listenToStream(stream: string) {
         currentId = streamData.messages[streamData.messages.length - 1].id;
         console.log(streamData);
         streamController[stream].listeners.forEach((ws) => {
-          ws.send(JSON.stringify(streamData.messages));
+          ws.send(
+            JSON.stringify({ type: "append", data: streamData.messages })
+          );
         });
       }
     } catch (e) {
@@ -96,7 +98,7 @@ async function sendHistoricalDataToWs(stream: string, ws: WebSocket) {
   ]);
 
   if (response) {
-    ws.send(JSON.stringify(response[0].messages));
+    ws.send(JSON.stringify({ type: "init", data: response[0].messages }));
   }
 }
 

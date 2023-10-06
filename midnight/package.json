@@ -12,6 +12,7 @@
     "@types/react": "^18.2.21",
     "@types/react-dom": "^18.2.7",
     "framer-motion": "^10.16.4",
+    "lodash.throttle": "^4.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
@@ -42,5 +43,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/lodash.throttle": "^4.1.7"
   }
 }

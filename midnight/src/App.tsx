@@ -1,6 +1,6 @@
 import { useState } from "react";
-import Listener from "./Listener";
 import useWebSocket from "react-use-websocket";
+import SingleStream from "./LogViewer";
 
 function App() {
   const [recents, setRecents] = useState<
@@ -17,16 +17,16 @@ function App() {
     onMessage: (event) => {
       const data: { id: string; message: { id: string } }[] = JSON.parse(
         event.data
-      );
+      ).data;
       data.reverse();
       setRecents((current) => {
         const newData = Object.fromEntries(
           data.map((entry, index) => {
             return [
               entry.message.id,
-              { 
-                connected: index === 0 ? true : false, 
-                timestamp: entry.id.split("-")[0] 
+              {
+                connected: index === 0 ? true : false,
+                timestamp: entry.id.split("-")[0],
               },
             ] as [string, { connected: boolean; timestamp: string }];
           })
@@ -84,7 +84,7 @@ function App() {
               </div>
 
               {connected && (
-                <Listener
+                <SingleStream
                   stream={id}
                   onDisconnect={() =>
                     setRecents({
