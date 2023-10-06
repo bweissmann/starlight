@@ -1,6 +1,6 @@
 import { useState } from "react";
 import useWebSocket from "react-use-websocket";
-import SingleStream from "./LogViewer";
+import SingleStream from "./logs/Index";
 
 function App() {
   const [recents, setRecents] = useState<
@@ -85,7 +85,7 @@ function App() {
 
               {connected && (
                 <SingleStream
-                  stream={id}
+                  streamName={id}
                   onDisconnect={() =>
                     setRecents({
                       ...recents,

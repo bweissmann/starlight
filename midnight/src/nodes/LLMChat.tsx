@@ -29,7 +29,7 @@ const LLMChat = ({
           <br />
           <strong>Result:</strong> {message.result}
           <br />
-          <strong>Spec:</strong> {typeof message.spec}
+          <strong>Spec:</strong> {message.spec}
           <br />
           <strong>Price:</strong> {message.price}
         </pre>

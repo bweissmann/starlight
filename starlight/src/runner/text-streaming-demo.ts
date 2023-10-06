@@ -1,7 +1,7 @@
 import "@/runner/initializer";
 
 import { defaultTx } from "@/project/context";
-import { emit } from "@/redis";
+import { emit, redis } from "@/redis";
 import OpenAI from "openai";
 import { Message, estimatePricing } from "@/llm/utils";
 
@@ -14,6 +14,7 @@ async function main() {
       role: "user",
       content:
         "What differentiated the Apple Macintosh from the Apple II and the Lisa?",
+      // "Where should i surf in san francisco?"
     },
   ];
 
@@ -47,4 +48,6 @@ async function main() {
   process.stdout.write("\n[EOF]\n");
 }
 await main();
+
+await redis?.quit();
 process.exit(0);
