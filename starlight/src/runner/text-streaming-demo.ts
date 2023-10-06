@@ -28,6 +28,9 @@ async function main() {
   });
   let output = "";
   for await (const part of stream) {
+    if (!part.choices) {
+      continue;
+    }
     const chunk = part.choices[0]?.delta.content || "";
     process.stdout.write(chunk);
     await emit(tx, "TEXT_CHUNK", {
